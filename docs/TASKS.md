@@ -7,9 +7,9 @@ in `docs/GAME_SPEC.md` §11.
 
 - [x] **Spec** — `docs/GAME_SPEC.md` (PR #1)
 - [x] **M0** — Reset repo, pnpm monorepo (shared/server/client), lint/format/typecheck/test, CI, context docs
-- [ ] **M1a** — Shared: config + defaults + validation, core types, seeded PRNG, room template
-      format + validator, 5+ starter templates with 8 symmetries, `generateMap(config)`, tests
-- [ ] **M1b** — Shared: `createMatch` (spawns, gem placement), `step()` (movement, search channel,
+- [x] **M1a** — Shared: config + defaults + validation, core types, seeded PRNG, room template
+      format + validator, 6 starter templates with 8 symmetries, `generateMap(config)`, tests
+- [x] **M1b** — Shared: `createMatch` (spawns, gem placement), `step()` (movement, search channel,
       gem pickup, per-team searched sets, timer, early end, overtime/draw), `teamScores`/`winner`,
       replay determinism test, tests for every rule and edge case in the spec
 - [ ] **M2** — Server: Colyseus room with join codes, lobby (teams, ready, host config, start

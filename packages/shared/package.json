@@ -5,7 +5,8 @@
   "type": "module",
   "description": "Pure, deterministic game rules for Eye Spy. No DOM, no Node APIs.",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./testing": "./src/testing.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

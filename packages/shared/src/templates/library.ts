@@ -1,0 +1,127 @@
+import type { RoomTemplate } from './format';
+
+/**
+ * Starter library at 12x12. Every template here keeps columns 4-7 of rows 0,1,10,11 and
+ * rows 4-7 of columns 0,1,10,11 clear, which satisfies door clearance for every door width
+ * from 1 to 4 (see `requiredClearTiles` in validate.ts). The test suite checks all widths
+ * under all 8 symmetries on every run; `generateMap` re-checks at generation time.
+ */
+export const TEMPLATES_12: RoomTemplate[] = [
+  {
+    id: 'bedroom',
+    size: 12,
+    rows: [
+      '............',
+      '.BB.......N.',
+      '.BB.......D.',
+      '.BB.........',
+      '............',
+      '....~~~~....',
+      '....~~~~....',
+      '............',
+      '.WW.....SS..',
+      '.WW.....SS..',
+      '............',
+      '............',
+    ],
+  },
+  {
+    id: 'study',
+    size: 12,
+    rows: [
+      '............',
+      '.SSS....SSS.',
+      '............',
+      '...~~~~~~...',
+      '...~KKKK~...',
+      '...~KKKK~...',
+      '...~~~~~~...',
+      '............',
+      '.CC......p..',
+      '.CC......p..',
+      '............',
+      '............',
+    ],
+  },
+  {
+    id: 'dining',
+    size: 12,
+    rows: [
+      '............',
+      '............',
+      '..TTTTTTT...',
+      '..TTTTTTT...',
+      '............',
+      '............',
+      '............',
+      '............',
+      '.HH......HH.',
+      '.HH......HH.',
+      '............',
+      '.fff........',
+    ],
+  },
+  {
+    id: 'lounge',
+    size: 12,
+    rows: [
+      '............',
+      '.CCC....RR..',
+      '........RR..',
+      '..~~~~~~~~..',
+      '..~CC~~CC~..',
+      '..~~~~~~~~..',
+      '..~~TT~~~~..',
+      '..~~TT~~~~..',
+      '..~~~~~~~~..',
+      '............',
+      '.p........p.',
+      '............',
+    ],
+  },
+  {
+    id: 'storage',
+    size: 12,
+    rows: [
+      '............',
+      '.RRR....RRR.',
+      '.RRR....RRR.',
+      '............',
+      '...R....R...',
+      '............',
+      '............',
+      '...R....R...',
+      '............',
+      '.RRR....RRR.',
+      '............',
+      '............',
+    ],
+  },
+  {
+    id: 'gallery',
+    size: 12,
+    rows: [
+      '............',
+      '............',
+      '..s..ll..s..',
+      '............',
+      '....HHHH....',
+      '...~HHHH~...',
+      '...~HHHH~...',
+      '....HHHH....',
+      '............',
+      '..s..ll..s..',
+      '............',
+      '............',
+    ],
+  },
+];
+
+/** Templates grouped by room size. Only 12 exists today; other sizes need authoring. */
+export const TEMPLATE_LIBRARY: Readonly<Record<number, readonly RoomTemplate[]>> = {
+  12: TEMPLATES_12,
+};
+
+export function templatesForSize(roomSize: number): readonly RoomTemplate[] {
+  return TEMPLATE_LIBRARY[roomSize] ?? [];
+}

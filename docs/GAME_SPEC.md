@@ -77,7 +77,7 @@ Rooms are **not** procedurally furnished. We maintain a **library of hand-author
 
 **Template rules (validated at load time, enforced by tests):**
 
-1. Door tiles and the one tile inward from every door are always clear.
+1. The two interior tiles in front of every possible door (all four walls) are always clear, so any template works in any room slot and under any rotation or mirror.
 2. Every walkable tile is reachable from every door (no sealed pockets).
 3. Every searchable furniture piece has at least one adjacent walkable tile to search from.
 
@@ -165,29 +165,34 @@ GameMap {
 Room { id, row, col, templateId, symmetry, bounds }
 Furniture { id, roomId, tiles: TilePos[], searchable: boolean, kind: string }
 
-// Live match state
+// Live match state. Durations are in ticks (exact at any tick rate); the HUD converts.
 MatchState {
-  phase: 'lobby' | 'countdown' | 'playing' | 'overtime' | 'ended'
+  phase: 'countdown' | 'playing' | 'overtime' | 'ended'
   tick: number
-  timeRemainingMs: number
+  countdownTicksRemaining, timeTicksRemaining, overtimeTicksRemaining: number
   teams: Team[]
   players: Player[]
   gems: Gem[]
-  searchedByTeam: Record<TeamId, Set<FurnitureId>>   // per-team fog of searched furniture
+  searchedByTeam: Record<TeamId, FurnitureId[]>    // per-team fog of searched furniture
   traps: Trap[]                                       // empty in MVP; reserved
+  rngState: number                                    // PRNG state for in-match randomness (scatter)
+  result: { winnerTeamId: TeamId | null, reason, scores } | null
 }
 Team { id, name, color, playerIds[] }
 Player {
   id, teamId, name, connected: boolean
-  pos: TilePos, facing: Dir
-  search?: { furnitureId, startedTick }
+  x, y, facing: Dir, lastRoomId
+  moveCooldownTicks: number
+  search?: { furnitureId, progressTicks }
+  searchLatchFurnitureId: FurnitureId | null        // hold-to-search is edge-triggered
   carriedGemIds: GemId[]
   effects: StatusEffect[]                             // empty in MVP; reserved (stun, burn, freeze, slow)
+  stats: { gemsFound, furnitureSearched, tilesWalked }
 }
 Gem { id, location:
   | { kind: 'furniture', furnitureId }
   | { kind: 'player', playerId }
-  | { kind: 'floor', pos } }
+  | { kind: 'floor', x, y } }
 
 // Inputs from clients (the only thing a client may send during play)
 Input = { type: 'move', dir } | { type: 'actionDown' } | { type: 'actionUp' }
@@ -197,8 +202,8 @@ Input = { type: 'move', dir } | { type: 'actionDown' } | { type: 'actionUp' }
 
 - `generateMap(config)` — deterministic from seed; picks templates/symmetries, stamps tiles, validates connectivity.
 - `placeGems(map, config, spawnRooms)` — deterministic distribution.
-- `step(state, inputsThisTick, config)` — advances one tick: applies moves (walls/furniture block), progresses/cancels searches, resolves completed searches, picks up floor gems on step, updates timer, checks end/overtime conditions.
-- `teamScores(state)` and `winner(state)`.
+- `step(state, map, config, inputsThisTick)` — advances one tick and returns the tick's events: applies moves (walls/furniture block), progresses/cancels searches, resolves completed searches, picks up floor gems on step, updates timer, checks end/overtime conditions.
+- `teamScores(state)` and `leader(state)` (the unique top team, or null on a tie).
 
 **Server tick:** 20 Hz. Clients send inputs as they happen; the server applies them on the next tick and broadcasts state deltas. Clients render the server's state with light interpolation. **No client-side prediction in MVP** (grid movement tolerates ~100 ms latency well); revisit if playtests feel sluggish.
 
