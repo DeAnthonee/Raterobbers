@@ -12,14 +12,14 @@ in `docs/GAME_SPEC.md` §11.
 - [x] **M1b** — Shared: `createMatch` (spawns, gem placement), `step()` (movement, search channel,
       gem pickup, per-team searched sets, timer, early end, overtime/draw), `teamScores`/`winner`,
       replay determinism test, tests for every rule and edge case in the spec
-- [ ] **M2** — Server: Colyseus room with join codes, lobby (teams, ready, host config, start
+- [x] **M2** — Server: Colyseus room with join codes, lobby (teams, ready, host config, start
       validation), countdown, 20 Hz loop, state broadcast, reconnection grace + gem scatter,
       results + rematch, in-process integration tests
-- [ ] **M3** — Client: Vite + Phaser scenes (Home, Lobby, Match, Results), tile renderer with
+- [x] **M3** — Client: Vite + Phaser scenes (Home, Lobby, Match, Results), tile renderer with
       placeholder art, camera follow, HUD, minimap, per-team searched overlay, keyboard + gamepad,
       interpolation, unit tests for non-canvas logic
-- [ ] **M4** — Playable build: one-command local run, Dockerfile for server, static client build,
-      deploy notes, Playwright smoke test (two clients join and move), template library toward 20
+- [x] **M4** — Playable build: one-command local run, Dockerfile for server, static client build,
+      deploy notes, Playwright smoke test (two clients join and move), template library at 14 (toward 20)
 
 ## Ongoing
 

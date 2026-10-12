@@ -777,7 +777,7 @@ describe('replay determinism', () => {
       rng: state.rngState,
     });
     expect(fingerprint).toBe(
-      '{"tick":900,"phase":"playing","scores":{"0":1,"1":3},"players":[["a",27,4,1],["c",27,4,2],["d",27,4,1]],"gems":"pffffppfp","rng":1854710753}',
+      '{"tick":460,"phase":"ended","scores":{"0":0,"1":7},"players":[["a",9,35,0],["c",9,35,1],["d",9,35,6]],"gems":"ffppppppp","rng":1286816280}',
     );
   });
 

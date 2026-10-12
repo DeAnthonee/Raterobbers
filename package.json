@@ -16,10 +16,12 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test"
+    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test",
+    "e2e": "playwright test"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",
+    "@playwright/test": "1.56.1",
     "@types/node": "^22.19.0",
     "eslint": "^10.0.0",
     "prettier": "^3.6.0",

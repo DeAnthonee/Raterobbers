@@ -21,9 +21,23 @@ Requires Node 22 and pnpm 10.
 
 ```bash
 pnpm install
-pnpm dev        # server + client with hot reload
-pnpm check      # lint, format check, typecheck, tests (same as CI)
+pnpm dev        # game server on :2567 (tsx watch) + client on :5173 (vite)
+pnpm check      # lint, format check, typecheck, unit tests (same as CI)
+pnpm e2e        # Playwright smoke test: real server + client in headless Chromium
 pnpm build
 ```
+
+Open http://localhost:5173, create a match, and share the 5-letter code. A second browser tab (or a friend on your network) joins with the code.
+
+## Deploy
+
+One Node process serves both the API/WebSocket and the built client, so a single container is the whole game.
+
+```bash
+docker build -t eye-spy .
+docker run -p 2567:2567 eye-spy      # open http://localhost:2567
+```
+
+Any host that runs a Docker image (Fly.io, Railway, Render, a VPS) works. Set `PORT` if the platform assigns one. The client connects to the same origin it was served from; to point a separately hosted client at another server, build it with `VITE_SERVER_URL=wss://your-server`.
 
 > This repository previously held an Android mini-game; it was removed in M0 and remains in git history.

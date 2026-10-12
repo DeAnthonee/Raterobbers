@@ -99,7 +99,7 @@ describe('generateMap', () => {
   it('uses non-identity symmetries and a stable fingerprint for a seed', () => {
     const fingerprint = map.rooms.map((r) => r.templateId + r.symmetry).join(',');
     expect(fingerprint).toBe(
-      'lounge7,bedroom7,storage0,dining6,gallery5,study4,storage3,gallery7,study6',
+      'hall2,bedroom6,conservatory7,kitchen3,study7,office6,attic4,vault4,storage4',
     );
     const symmetries = new Set<number>();
     for (let seed = 1; seed <= 20; seed++) {
@@ -150,9 +150,10 @@ describe('generateMap', () => {
     const ids = map.rooms.map((r) => r.templateId);
     const counts = new Map<string, number>();
     for (const id of ids) counts.set(id, (counts.get(id) ?? 0) + 1);
-    // 9 rooms, 6 templates: no template appears more than twice.
-    for (const n of counts.values()) expect(n).toBeLessThanOrEqual(2);
-    expect(counts.size).toBe(6);
+    // The deck is dealt without repeats until the library is exhausted.
+    const library = templatesForSize(12).length;
+    for (const n of counts.values()) expect(n).toBeLessThanOrEqual(Math.ceil(9 / library));
+    expect(counts.size).toBe(Math.min(9, library));
   });
 
   it('has carpet only on floor tiles', () => {

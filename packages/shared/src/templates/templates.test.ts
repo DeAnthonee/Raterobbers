@@ -169,8 +169,8 @@ describe('symmetry', () => {
 });
 
 describe('built-in library', () => {
-  it('has at least 5 templates at size 12', () => {
-    expect(TEMPLATES_12.length).toBeGreaterThanOrEqual(5);
+  it('has at least 14 templates at size 12', () => {
+    expect(TEMPLATES_12.length).toBeGreaterThanOrEqual(14);
     expect(templatesForSize(12)).toBe(TEMPLATES_12);
     expect(templatesForSize(99)).toEqual([]);
   });

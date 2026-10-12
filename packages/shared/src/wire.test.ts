@@ -28,7 +28,12 @@ describe('wire format', () => {
   });
 
   it('round-trips a match in progress with searches, floor gems, and a result', () => {
-    const config = makeConfig({ seed: 8, countdownSec: 0, matchDurationSec: 30 });
+    const config = makeConfig({
+      seed: 8,
+      countdownSec: 0,
+      matchDurationSec: 30,
+      overtimeCapSec: 0,
+    });
     const map = generateMap(config);
     const { state } = createMatch(config, map, teams);
     const rng = createRng(1);

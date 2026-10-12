@@ -167,3 +167,145 @@ Both were test mistakes, not code bugs. 62 tests pass.
   (Phase 2 stun semantics will want that); floor pickups do not count as `gemsFound`.
 - Added `wire.ts`: a flat wire format (`matchToWire` / `matchFromWire`, exact inverses) so
   the Colyseus schema in M2 can mirror the state and the client can rebuild a `MatchState`.
+
+## 2026-10-12 — M2: Colyseus game server
+
+**What landed** (`packages/server/src`):
+
+- `schema.ts`: Colyseus Schema mirroring the shared wire format one-to-one (`RoomState` →
+  `phase`, `joinCode`, `hostSessionId`, `config`, `lobby`, `match`). Built with the
+  `schema()` / `t.*` builder API (decorators are being phased out in @colyseus/schema 5).
+- `sync.ts`: `syncConfig` / `syncMatch` copy plain state into the schema, assigning only
+  fields that changed so Colyseus sends small deltas. Tested with the schema `Encoder`:
+  zero bytes when nothing changed, a small delta for one move.
+- `GameRoom.ts`: join codes (5 letters, no I/O/0/1, registered in Presence so they are
+  unique per process cluster), lobby messages (`setName`, `setTeam`, `ready`, `setConfig`
+  host-only with `validateMatchSetup`, `start`), 20 Hz accumulator loop on
+  `setTimestep` capped at 10 ticks per update, `input` events reduced into held inputs,
+  `map` sent on start and on reconnect, `events` broadcast per tick, `onDrop` →
+  `allowReconnection(grace)` with the held input reset, removal + gem scatter + forfeit
+  check when the grace expires or a player leaves, `rematch` back to the lobby with a new
+  seed. Teams with no players are dropped from the match config at start time.
+- `app.ts` / `index.ts`: `defineServer` with one room type `game`; `PORT` env (default 2567).
+- `build.mjs`: esbuild bundles `@eyespy/*` into `dist/index.js` and leaves node_modules
+  external. Needed because Node's built-in type stripping loads `shared/src/index.ts` but
+  cannot resolve its extension-less relative imports.
+
+**Decisions and lessons.**
+
+- **Do not depend on the `colyseus` meta-package.** It auto-installs the optional
+  uWebSockets transport whose `uWebSockets.js` dependency is a git-over-SSH source; GitHub
+  Actions cannot clone it and `pnpm install --frozen-lockfile` failed. The server depends
+  on `@colyseus/core` + `@colyseus/ws-transport` directly. The lockfile has no git sources.
+- The SDK's `waitForInitialState()` test helper hangs for the second client in a fresh
+  process; the integration tests poll with `vi.waitFor` instead.
+- The server treats every client payload as untrusted: inputs, names, team ids and config
+  patches are parsed and validated before use.
+- Per-team searched-furniture fog is in the shared state and is filtered on the client
+  for the MVP (a cheater with devtools could read the other team's list). Colyseus
+  `StateView` filters can make it server-side later.
+
+**Review pass (M2).** 32 findings from the reviewer agent; the ones that changed code:
+
+- **Hidden information leaked to every client.** The schema carried each hidden gem's
+  furniture id, every team's searched list, and the RNG state, and `events` broadcast every
+  search result. Now `toPublicWire` masks hidden gem locations and the RNG state, the
+  searched list travels as a per-team `searched` message, and `searchComplete` /
+  furniture pickups go only to the searching team. Opponents still see gem _counts_.
+- Rooms are **private** (`setPrivate(true)`): reachable by join code only, never by
+  `join('game')` matchmaking.
+- Lobby capacity is enforced on join and on config changes; host transfer skips
+  disconnected players; a drop on the results screen keeps the seat (grace) instead of
+  dropping the player; grace expiry after the match ended no longer mutates the finished
+  match; rematch and start release pending reconnection seats so a ghost cannot block Start.
+- `sanitizeName` accepts strings only and counts code points (no split surrogate pairs).
+- Patches are broadcast right after each tick (`broadcastPatch`) so clients see exactly
+  one tick per patch; `map`/`events`/`searched` messages use `afterNextPatch` so a client
+  never sees an event before the state it describes. `maxMessagesPerSecond = 100`.
+- Append-only arrays (searched lists, carried gems) are appended on the schema instead of
+  rewritten. Direct `update()` tests cover the accumulator (no drift over 1000 uneven
+  frames, 10-tick cap, stop on end).
+- Kept as is: players stay an `ArraySchema` (the client keys its sprites by id, so instance
+  shifting on removal does not matter); the reconnect grace doubles as the forfeit timer
+  (documented in `checkForfeit`).
+
+## 2026-10-12 — M3: browser client (Vite + Phaser)
+
+**What landed** (`packages/client`):
+
+- `net.ts`: thin wrapper over `@colyseus/sdk` (`create`, `joinById`, `reconnect` with the
+  token kept in `sessionStorage`), exposing the wire state via `toJSON()` and the `map`,
+  `events`, `searched`, and `error` messages.
+- `inputMapper.ts`: per-frame held state (keyboard + gamepad merged) → edge-triggered
+  input events; newest held direction wins. Unit-tested.
+- `viewModel.ts`: pure HUD/result models, clock formatting, `glide()` interpolation (one
+  tile per `moveIntervalMs`, snaps on teleports). Unit-tested.
+- `ui.ts`: HTML overlays for Home (name, create, join code), Lobby (teams, ready, host
+  settings, start), Results (winner, team and player stats, rematch), and toasts. Menus
+  are plain DOM on purpose: forms and lists are easier and more accessible there than in
+  a canvas.
+- `scenes/MatchScene.ts`: draws the map once into a texture (walls, floor, carpet, doors,
+  furniture by kind), players as team-coloured discs with a facing marker, name and gem
+  count, floor gems, my team's searched overlay, search progress bar, HUD, a minimap of
+  rooms, countdown and sudden-death banners. Camera follows the local player.
+- `main.ts`: phase router. Lobby/results are overlays; countdown/playing/overtime run the
+  match scene. A dev-only `window.__eyespy` hook exposes the wire state for end-to-end tests.
+
+**Lessons.**
+
+- Phaser auto-starts the first scene in its config. The match scene needs connection data,
+  so an idle `BootScene` sits first and the match scene starts on demand.
+- Verified end to end in headless Chromium (Playwright): two browsers create and join a
+  match by code, ready up, start, and the host walks three tiles on arrow keys. This
+  becomes the M4 smoke test.
+
+## 2026-10-12 — M4: playable build
+
+**What landed.**
+
+- The server serves the built client (`packages/client/dist`) on the same origin via
+  Express static, plus `/healthz`. One deployment is the whole game; the client connects
+  to the origin it was served from (dev: Vite on 5173 → server on 2567).
+- `Dockerfile` (multi-stage, pnpm, production deps only) and `.dockerignore`. Not run in
+  this environment (no Docker daemon); the equivalent commands were exercised by hand:
+  build both packages, run `node dist/index.js`, and fetch `/`, an asset, and `/healthz`.
+- `pnpm e2e`: a Playwright test (`e2e/smoke.spec.ts`) that boots the real server and
+  client, creates a match in one browser, joins by (lower-cased) code in another, readies
+  up, starts, walks with arrow keys, and checks the guest sees the host's new position.
+  Plus a bad-code case. CI runs it as a second job after the unit checks.
+- Room template library grown from 6 to 14 (library, kitchen, hall, nursery, office,
+  vault, conservatory, attic). Every template is checked under all 8 symmetries for door
+  widths 1–4 on every test run.
+
+**Decisions.**
+
+- `pnpm e2e` is not part of `pnpm check` so the fast loop stays fast; CI runs both.
+- Playwright pinned to 1.56 to match the browsers pre-installed in the cloud session;
+  `PW_CHROMIUM_PATH` points it at a pre-installed Chromium instead of downloading one.
+
+**Review pass (M3).** 14 findings from the reviewer agent; what changed:
+
+- **Rematch was broken.** The SDK's `onStateChange` returns a _shared_ emitter, so the
+  match scene's unsubscribe wiped the app's own listener; and Phaser reuses the scene
+  instance, so cached player/gem views outlived their destroyed display objects. Now the
+  wrapper removes only its own callback, the scene clears its caches in `init`, and
+  shutdown removes the map texture, clears keyboard captures (they are global and were
+  swallowing Space/arrows on the HTML screens afterwards) and nulls message handlers.
+- A reconnection re-sends the same map; the client now keys the map by the match seed and
+  only restarts the scene for a new seed. The map is dropped when the room returns to the
+  lobby so the next start cannot briefly draw the old one.
+- Reconnection token: refreshed after an SDK auto-reconnect (the server rotates it) and
+  only cleared on a consented leave. Close codes compared against `CloseCode.CONSENTED`.
+- Lobby overlay re-renders only when the visible model changed and keeps the focused
+  input's value, so other players readying up no longer wipe the host's half-typed number.
+  Start is disabled client-side until everyone is ready and two teams have players; room
+  size is now editable; gem count steps by 2.
+- Glide interpolation moves one axis at a time (no diagonal through furniture corners).
+- Colours interpolated into style attributes are validated as hex; `esc()` is exported
+  and tested; the network wrapper is testable through a `RoomLike` fake.
+- Kept as is: one Phaser bundle (~1.4 MB), HUD "OVERTIME" prefix instead of flashing.
+- An end-to-end rematch test now covers the path that was broken.
+- The rematch end-to-end test then caught one more: Phaser can run the next start's
+  `init()` before the previous run's shutdown, so an unsubscribe handle stored on the
+  scene instance was nulled before shutdown used it and the dead scene kept receiving
+  state. Subscriptions now live in a closure in `create()` with a liveness flag.
