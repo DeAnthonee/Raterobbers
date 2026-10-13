@@ -22,7 +22,7 @@ Cloudflare Tunnel setup; nothing here is Mac-specific.
 ## Checklist for a fresh host
 
 ```bash
-git clone git@github.com:DeAnthonee/Eye_Spy.git && cd Eye_Spy
+git clone https://github.com/DeAnthonee/Raterobbers.git && cd Raterobbers
 corepack enable
 pnpm install --frozen-lockfile
 pnpm check            # gate

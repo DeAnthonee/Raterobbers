@@ -309,3 +309,12 @@ Both were test mistakes, not code bugs. 62 tests pass.
   `init()` before the previous run's shutdown, so an unsubscribe handle stored on the
   scene instance was nulled before shutdown used it and the dead scene kept receiving
   state. Subscriptions now live in a closure in `create()` with a liveness flag.
+
+## 2026-10-13 — Deployment contract and move to DeAnthonee/Raterobbers
+
+- `/healthz` now reports `version`, `build` time, and live `playing`/`rooms`/`players`
+  counts; `index.html` is `no-cache`, hashed assets are immutable; the server binds
+  `0.0.0.0`; `pnpm start` at the root; server tests use a random loopback port. The full
+  hosting contract is `docs/DEPLOY.md` and the `[OPS]` issue rule is in `CLAUDE.md`.
+- The owner created `DeAnthonee/Raterobbers` (public) as the game's home. The complete
+  history was pushed there from `Eye_Spy`; this journal continues in the new repo.

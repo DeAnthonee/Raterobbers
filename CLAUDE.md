@@ -1,6 +1,7 @@
-# Eye Spy — context for AI sessions
+# Eye Spy (repo: DeAnthonee/Raterobbers) — context for AI sessions
 
 Read this first. It is the hand-off between sessions working on this repository.
+The code started life in `DeAnthonee/Eye_Spy` (PRs #1–#5 there) and moved here with its full history on 2026-10-13; the public hostname is raterobbers.deanthoneeking.com.
 
 ## What we are building
 
