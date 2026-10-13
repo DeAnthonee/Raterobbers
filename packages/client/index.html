@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Rate Robbers</title>
     <style>
       :root {
@@ -17,6 +17,8 @@
       body {
         margin: 0;
         height: 100%;
+        touch-action: none;
+        -webkit-touch-callout: none;
         background: var(--bg);
         color: var(--text);
         font-family:
@@ -127,6 +129,12 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      #overlay input,
+      #overlay button {
+        touch-action: manipulation;
       }
       .code {
         font-family: ui-monospace, monospace;
@@ -215,14 +223,30 @@
       }
       #touch .dpad {
         position: absolute;
-        left: 16px;
-        bottom: 16px;
-        width: 150px;
-        height: 150px;
+        left: calc(16px + env(safe-area-inset-left));
+        bottom: calc(16px + env(safe-area-inset-bottom));
+        width: 180px;
+        height: 180px;
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         grid-template-rows: repeat(3, 1fr);
-        gap: 4px;
+        gap: 6px;
+      }
+      #rotate {
+        display: none;
+        position: fixed;
+        inset: 0;
+        place-items: center;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 6;
+        font-size: 20px;
+        text-align: center;
+        padding: 24px;
+      }
+      @media (orientation: portrait) and (pointer: coarse) {
+        body.in-match #rotate {
+          display: grid;
+        }
       }
       .touch-btn {
         pointer-events: auto;
@@ -257,8 +281,8 @@
       }
       .touch-btn.action {
         position: absolute;
-        right: 16px;
-        bottom: 24px;
+        right: calc(16px + env(safe-area-inset-right));
+        bottom: calc(24px + env(safe-area-inset-bottom));
         width: 110px;
         height: 110px;
         border-radius: 50%;
@@ -290,6 +314,7 @@
   <body>
     <div id="game"></div>
     <div id="overlay" class="hidden"></div>
+    <div id="rotate">Turn your phone sideways to play</div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

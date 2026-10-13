@@ -12,6 +12,7 @@ describe('invite links', () => {
     expect(parseInviteCode('')).toBeNull();
     expect(parseInviteCode('?code=')).toBeNull();
     expect(parseInviteCode('?code=abc')).toBeNull();
+    expect(parseInviteCode('?code=abcdef')).toBeNull(); // the server mints exactly 5 letters
     expect(parseInviteCode('?code=<script>')).toBeNull();
     expect(parseInviteCode('?code=ABCDEFGH')).toBeNull();
   });

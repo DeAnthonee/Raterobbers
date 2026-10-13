@@ -26,7 +26,6 @@ declare global {
 }
 
 /** Run `fn` in the page against the hook. `fn` must be self-contained; pass data via `arg`. */
-/** Contexts created inside a test are closed here so background pages do not pile up. */
 const opened: { close(): Promise<void> }[] = [];
 test.afterEach(async () => {
   for (const c of opened.splice(0)) await c.close().catch(() => undefined);
@@ -212,6 +211,14 @@ test('an invite link lands a named friend straight in the lobby', async ({ brows
   await regular.goto(`/?code=${code}`);
   await expect(regular.locator('.code')).toHaveText(code);
   await expect(host.locator('.team li')).toHaveCount(3);
+
+  // A bad code with a saved name: back on Home with the code kept and an explanation.
+  const lost = await newPage(browser);
+  await lost.goto('/');
+  await lost.evaluate(() => localStorage.setItem('raterobbers.name', 'Lost'));
+  await lost.goto('/?code=ZZZZZ');
+  await expect(lost.locator('#toast')).toHaveClass(/visible/);
+  await expect(lost.locator('#code')).toHaveValue('ZZZZZ');
 });
 
 test('a phone can play with the on-screen controls', async ({ browser }) => {
@@ -231,6 +238,9 @@ test('a phone can play with the on-screen controls', async ({ browser }) => {
   await expect(phone.locator('.code')).toHaveText(code);
   await host.fill('input[data-cfg="matchDurationSec"]', '60');
   await host.press('input[data-cfg="matchDurationSec"]', 'Tab');
+  await host.fill('input[data-cfg="reconnectGraceSec"]', '1');
+  await host.press('input[data-cfg="reconnectGraceSec"]', 'Tab');
+  await expect.poll(() => hook(host, (h) => h.state()?.config.reconnectGraceSec)).toBe(1);
   await host.click('#ready');
   await phone.click('#ready');
   await expect(host.locator('#start')).toBeEnabled();
@@ -253,5 +263,10 @@ test('a phone can play with the on-screen controls', async ({ browser }) => {
   }
   const after = await me(phone);
   expect(after).not.toEqual(expect.objectContaining({ x: start.x, y: start.y }));
+
+  // When the match ends (the only opponent leaves for good) the controls go away again.
+  await host.context().close();
+  await expect.poll(() => hook(phone, (h) => h.state()?.phase), { timeout: 15_000 }).toBe('ended');
+  await expect(phone.locator('#touch')).toBeHidden();
   expect(errors).toEqual([]);
 });

@@ -5,7 +5,7 @@ Cloudflare Tunnel setup; nothing here is Mac-specific.
 
 | Item        | Value                                                                                                                                                                                                                                                                                                                                           |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Repo        | `github.com/DeAnthonee/Eye_Spy` (private; the host needs a deploy key or token with read access)                                                                                                                                                                                                                                                |
+| Repo        | `github.com/DeAnthonee/Raterobbers` (PUBLIC: no deploy key needed to pull; never commit secrets)                                                                                                                                                                                                                                                |
 | Branch      | `master`. Every change lands through a PR whose CI (`check` + `e2e` jobs) must be green before merge; master itself is the deploy source.                                                                                                                                                                                                       |
 | App folder  | Repository root (pnpm monorepo). `packages/server` is what runs, but it bundles `packages/shared` and serves `packages/client/dist`, so the whole repo must be checked out and built.                                                                                                                                                           |
 | Runtime     | Node 22 (tested on 22.22 locally and 22.23 in CI). Build step: yes. Nothing is written to disk; all game state is in memory. No database. `DATA_DIR` is not read.                                                                                                                                                                               |
@@ -36,5 +36,8 @@ curl -s http://127.0.0.1:3400/healthz
 - The game is one Node process serving both the WebSocket API and the static client.
   There is no separate web server to configure.
 - Matches are joined by a 5-letter code shown in the lobby; there is no public match list.
+- `pnpm e2e` rebuilds `packages/client/dist` with `VITE_E2E=1`, which enables a read-only
+  `window.__raterobbers` state hook. Harmless if that build is then served, but a deploy
+  always runs its own `pnpm build`.
 - Phase 3 (accounts, progression) will add persistence. When it does, this document and
   the `DATA_DIR` line change; until then nothing touches the filesystem at runtime.

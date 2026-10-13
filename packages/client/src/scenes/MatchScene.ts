@@ -397,7 +397,8 @@ export class MatchScene extends Phaser.Scene {
     const cell = 14;
     const pad = 12;
     const x0 = pad;
-    const y0 = this.scale.height - pad - this.map.mapRows * cell;
+    // The on-screen d-pad lives bottom-left on phones; keep the minimap out from under it.
+    const y0 = this.touch ? 90 : this.scale.height - pad - this.map.mapRows * cell;
     const me = s.match.players.find((p) => p.id === this.conn.sessionId);
     this.minimap.clear();
     this.minimap

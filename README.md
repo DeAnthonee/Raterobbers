@@ -28,7 +28,7 @@ pnpm e2e        # Playwright smoke test: real server + client in headless Chromi
 pnpm build
 ```
 
-Open http://localhost:5173, create a match, and share the 5-letter code. A second browser tab (or a friend on your network) joins with the code.
+Open http://localhost:5173, create a match, and share the 5-letter code or the invite link from the lobby (`/?code=ABCDE`). A second browser tab, or a friend on your network, joins with it. Phones get on-screen controls.
 
 ## Deploy
 

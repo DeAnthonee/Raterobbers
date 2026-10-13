@@ -36,6 +36,9 @@ export const LIMITS = {
   tickRate: { min: 5, max: 60 },
 } as const;
 
+/** Length of the join code the server mints and the client accepts. */
+export const JOIN_CODE_LENGTH = 5;
+
 /** Seeds are 32-bit: larger values alias (the PRNG only keeps the low 32 bits). */
 export const MAX_SEED = 2 ** 32 - 1;
 

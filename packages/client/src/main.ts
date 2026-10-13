@@ -37,6 +37,7 @@ function stopMatchScene(): void {
   if (game.scene.isActive('match')) game.scene.stop('match');
   matchRunning = false;
   touch.hide();
+  document.body.classList.remove('in-match');
 }
 
 function render(state: WireRoomState): void {
@@ -60,10 +61,12 @@ function render(state: WireRoomState): void {
     case 'overtime':
       overlay.hide();
       if (touchEnabled) touch.show();
+      document.body.classList.add('in-match');
       startMatchSceneIfReady();
       break;
     case 'ended':
       touch.hide();
+      document.body.classList.remove('in-match');
       startMatchSceneIfReady();
       overlay.showResults(state, sessionId, {
         onRematch: () => conn?.send('rematch', {}),
@@ -123,45 +126,64 @@ function showHome(prefillCode = ''): void {
   overlay.showHome(
     {
       onCreate: (name) => void connect(() => net.create(name), 'Creating match…'),
-      onJoin: (code, name) => void connect(() => net.join(code, name), 'Joining…'),
+      onJoin: (code, name) => void connect(() => net.join(code, name), 'Joining…', code),
     },
     prefillCode,
   );
 }
 
-/** Invite link (`/?code=ABCDE`): prefill the code, or join straight away with a saved name. */
-function handleInvite(): boolean {
+/**
+ * Invite link (`/?code=ABCDE`): a player who still holds a seat resumes it; otherwise join
+ * straight away with a saved name, or open Home with the code prefilled.
+ */
+async function handleInvite(): Promise<boolean> {
   const code = parseInviteCode(window.location.search);
   if (!code) return false;
-  history.replaceState(null, '', window.location.pathname);
+  try {
+    history.replaceState(null, '', window.location.pathname);
+  } catch {
+    // Sandboxed in-app browsers can refuse; the code just stays in the address bar.
+  }
+  if (storedToken()) {
+    overlay.showConnecting('Reconnecting…');
+    const resumed = await net.tryReconnect();
+    if (resumed) {
+      attach(resumed);
+      return true;
+    }
+  }
   let savedName = '';
   try {
     savedName = localStorage.getItem('raterobbers.name') ?? '';
   } catch {
     /* ignore */
   }
-  if (savedName) void connect(() => net.join(code, savedName), `Joining ${code}…`);
+  if (savedName) await connect(() => net.join(code, savedName), `Joining ${code}…`, code);
   else showHome(code);
   return true;
 }
 
-async function connect(make: () => Promise<Connection>, text: string): Promise<void> {
+async function connect(
+  make: () => Promise<Connection>,
+  text: string,
+  fallbackCode = '',
+): Promise<void> {
   overlay.showConnecting(text);
   try {
     attach(await make());
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     overlay.toast(
-      /locked|not found|already started/i.test(message)
-        ? 'That match is not open to join'
+      /locked|not found|already started|full/i.test(message)
+        ? `That match is not open to join (${message})`
         : `Could not connect: ${message}`,
     );
-    showHome();
+    showHome(fallbackCode);
   }
 }
 
 async function boot(): Promise<void> {
-  if (handleInvite()) return;
+  if (await handleInvite()) return;
   if (!storedToken()) {
     showHome();
     return;

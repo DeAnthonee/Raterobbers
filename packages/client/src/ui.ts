@@ -77,7 +77,7 @@ export class Overlay {
           <input id="code" maxlength="5" placeholder="JOIN CODE" autocapitalize="characters" value="${esc(prefillCode)}" />
           <button id="join">Join</button>
         </div>
-        <p class="muted small">Move: arrows / WASD / D-pad. Search: Space / Enter / A button.</p>
+        <p class="muted small">Move: arrows / WASD / D-pad / on-screen pad. Search: Space / Enter / A button / SEARCH.</p>
       </div>`);
     const name = (): string => {
       const v = (el.querySelector('#name') as HTMLInputElement).value.trim();
@@ -173,6 +173,7 @@ export class Overlay {
             ${num('mapRows', 'Room rows')}${num('mapCols', 'Room columns')}
             ${num('roomSize', 'Room size (tiles)')}${num('gemCount', 'Gems (odd)', 2)}
             ${num('matchDurationSec', 'Match seconds')}${num('overtimeCapSec', 'Overtime seconds')}
+            ${num('reconnectGraceSec', 'Reconnect grace seconds')}
             ${num('searchDurationMs', 'Search ms')}${num('moveIntervalMs', 'Step ms')}
           </div>
         </details>
@@ -202,13 +203,10 @@ export class Overlay {
     el.querySelector('#ready')?.addEventListener('click', () => handlers.onReady(!me?.ready));
     el.querySelector('#start')?.addEventListener('click', () => handlers.onStart());
     el.querySelector('#leave')?.addEventListener('click', () => handlers.onLeave());
-    el.querySelector('#invite')?.addEventListener('click', () => {
-      const link = inviteLink(window.location.origin, state.joinCode);
-      void navigator.clipboard
-        ?.writeText(link)
-        .then(() => this.toast('Invite link copied'))
-        .catch(() => this.toast(link));
-    });
+    el.querySelector('#invite')?.addEventListener(
+      'click',
+      () => void this.shareInvite(state.joinCode),
+    );
   }
 
   showResults(
@@ -247,6 +245,26 @@ export class Overlay {
       </div>`);
     el.querySelector('#rematch')?.addEventListener('click', () => handlers.onRematch());
     el.querySelector('#leave')?.addEventListener('click', () => handlers.onLeave());
+  }
+
+  /** Phones get the native share sheet; desktops the clipboard; plain-http origins a prompt. */
+  async shareInvite(code: string): Promise<void> {
+    const link = inviteLink(window.location.origin, code);
+    const nav = navigator as Navigator & { share?: (data: { url: string }) => Promise<void> };
+    if (typeof nav.share === 'function') {
+      await nav.share({ url: link }).catch(() => undefined); // user cancelled: fine
+      return;
+    }
+    if (nav.clipboard && window.isSecureContext) {
+      try {
+        await nav.clipboard.writeText(link);
+        this.toast('Invite link copied');
+        return;
+      } catch {
+        /* fall through */
+      }
+    }
+    window.prompt('Copy this invite link', link);
   }
 
   showConnecting(text: string): void {

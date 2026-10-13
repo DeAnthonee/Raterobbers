@@ -334,3 +334,15 @@ Both were test mistakes, not code bugs. 62 tests pass.
   "Copy invite link" button. The code is stripped from the address bar after use.
 - End-to-end tests cover both: an emulated Pixel 7 joins and walks with the on-screen d-pad;
   an invite link lands a friend in the lobby with and without a saved name.
+
+**Review pass (touch controls and invite links).** Applied: the share button silently did
+nothing on plain-http origins (clipboard needs a secure context), so it now uses the native
+share sheet on phones, the clipboard where allowed, and a prompt otherwise; the d-pad
+could not change direction by sliding a thumb (pointer capture pins the pointer to the first
+button), fixed by hit-testing on `pointermove`; the minimap moves to the top-left when the
+d-pad is on screen; a rotate-your-phone overlay in portrait on coarse-pointer devices;
+`touch-action: none` on the page, safe-area insets, larger d-pad cells; invite failures keep
+the code on Home and an invite tapped mid-match resumes the seat first; the join-code length
+is one shared constant (`JOIN_CODE_LENGTH`); reconnect grace is editable in the lobby.
+Known gaps: no DOM-level unit tests for the control wiring (the Pixel 7 end-to-end test
+covers it), and the e2e taps dispatch pointer events rather than real touches.

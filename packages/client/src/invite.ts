@@ -1,6 +1,7 @@
 /** Invite links: `https://host/?code=ABCDE` lands a friend straight in the lobby. */
+import { JOIN_CODE_LENGTH } from '@raterobbers/shared';
 
-export const CODE_PATTERN = /^[A-Z]{4,6}$/;
+export const CODE_PATTERN = new RegExp(`^[A-Z]{${JOIN_CODE_LENGTH}}$`);
 
 export function parseInviteCode(search: string): string | null {
   const raw = new URLSearchParams(search).get('code');

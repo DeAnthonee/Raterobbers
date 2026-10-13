@@ -62,6 +62,9 @@ export class TouchControls {
     this.root.append(pad, action);
     parent.appendChild(this.root);
     window.addEventListener('blur', () => this.state.clear());
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) this.state.clear();
+    });
   }
 
   private button(key: TouchKey, label: string, cls: string): HTMLButtonElement {
@@ -78,6 +81,16 @@ export class TouchControls {
         // Synthetic events (tests) have no real pointer to capture.
       }
       this.state.down(e.pointerId, key);
+    });
+    // A captured pointer keeps reporting to the button it started on, so sliding a thumb
+    // across the d-pad re-targets by hit-testing the pointer's position.
+    el.addEventListener('pointermove', (e) => {
+      if (key === 'action') return;
+      const under = document
+        .elementFromPoint(e.clientX, e.clientY)
+        ?.closest<HTMLElement>('.touch-btn.dir');
+      const next = under?.dataset['key'] as TouchKey | undefined;
+      if (next && next !== 'action') this.state.down(e.pointerId, next);
     });
     const release = (e: PointerEvent): void => {
       this.state.up(e.pointerId);
