@@ -346,3 +346,10 @@ the code on Home and an invite tapped mid-match resumes the seat first; the join
 is one shared constant (`JOIN_CODE_LENGTH`); reconnect grace is editable in the lobby.
 Known gaps: no DOM-level unit tests for the control wiring (the Pixel 7 end-to-end test
 covers it), and the e2e taps dispatch pointer events rather than real touches.
+
+## 2026-10-13 — Solo practice
+
+A host alone in the lobby can start a one-team match (`teamCount` 1 is now valid in the
+shared config; the server only insists on two teams when there are two or more players).
+The results screen calls it "Practice over". Exists so the owner can try the game without
+rounding up friends; the end-to-end suite has a solo run.

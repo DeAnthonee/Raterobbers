@@ -535,6 +535,17 @@ describe('timer and end conditions', () => {
     expect(state.result?.reason).toBe('draw');
   });
 
+  it('a solo practice match (one team) ends on the timer with that team as winner', () => {
+    const solo: TeamSetup[] = [{ id: 0, name: 'Red', players: [{ id: 'a', name: 'Ann' }] }];
+    const config = makeConfig({ seed: 7, countdownSec: 0, teamCount: 1, matchDurationSec: 30 });
+    const map = generateMap(config, { templates: [TEST_TEMPLATE] });
+    const { state } = createMatch(config, map, solo);
+    runTicks(state, map, config, {}, ticksForSeconds(config, 30));
+    expect(state.phase).toBe('ended');
+    expect(state.result?.winnerTeamId).toBe(0);
+    expect(state.result?.reason).toBe('timer');
+  });
+
   it('step is a no-op once ended', () => {
     const { config, map, state } = setup({ matchDurationSec: 30 });
     giveGems(state, 'a', 1);

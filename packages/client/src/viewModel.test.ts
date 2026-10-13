@@ -130,6 +130,15 @@ describe('resultModel', () => {
     }
   });
 
+  it('calls a one-team match practice', () => {
+    const s = roomState('ended');
+    s.match.teams = s.match.teams.slice(0, 1);
+    s.match.hasResult = true;
+    s.match.resultWinnerTeamId = 0;
+    s.match.resultReason = 'timer';
+    expect(resultModel(s, 'a').headline).toBe('Practice over');
+  });
+
   it('reports a draw', () => {
     const s = roomState('ended');
     s.match.hasResult = true;

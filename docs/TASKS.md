@@ -28,6 +28,7 @@ in `docs/GAME_SPEC.md` §11.
 - [x] Invite links (`/?code=ABCDE`, share sheet / clipboard / prompt fallback)
 - [x] Deployment contract (`docs/DEPLOY.md`): health endpoint, cache headers, 0.0.0.0 bind
 - [x] End-to-end suite runs against the production build
+- [x] Solo practice: a lone host can start a one-team match
 
 ## Ongoing
 

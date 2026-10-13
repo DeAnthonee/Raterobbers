@@ -331,7 +331,10 @@ export class GameRoom extends Room<{ state: RoomStateSchema }> {
       byTeam.set(e.teamId, list);
     }
     const teamIds = [...byTeam.keys()].sort((a, b) => a - b);
-    if (teamIds.length < 2) return 'Need at least two teams with a player each';
+    // Alone in the lobby: solo practice (one team, no opponents). Otherwise two teams minimum.
+    if (teamIds.length < 2 && entries.length > 1) {
+      return 'Players must be on at least two teams';
+    }
     const teams: TeamSetup[] = teamIds.map((id) => ({
       id,
       name: TEAM_NAMES[id] ?? `Team ${id + 1}`,
