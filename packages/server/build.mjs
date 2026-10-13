@@ -11,6 +11,7 @@ await build({
   outfile: 'dist/index.js',
   sourcemap: true,
   logLevel: 'info',
+  define: { __BUILD_TIME__: JSON.stringify(new Date().toISOString()) },
   plugins: [
     {
       name: 'externalize-node-modules',

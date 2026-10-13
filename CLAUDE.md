@@ -12,6 +12,7 @@ come after the core game is playable.
 - **The spec is the source of truth:** `docs/GAME_SPEC.md`. Read it before changing rules.
 - **The journey so far:** `docs/JOURNAL.md`. Decisions, lessons, and why things are the way they are.
 - **Task list / roadmap:** `docs/TASKS.md`. Keep it updated as work lands.
+- **How it is hosted:** `docs/DEPLOY.md`. The health endpoint, ports, and test gate are a contract.
 
 ## Architecture (decided, do not relitigate without the owner)
 
@@ -26,6 +27,11 @@ pnpm monorepo, TypeScript everywhere:
 Future console port rebuilds only the client; rules and server protocol carry over.
 
 ## Working agreements with the owner (DeAnthonee)
+
+- **Before starting any work, check open GitHub Issues titled `[OPS]`.** They are reports
+  from the hosting machine's monitors. Fix or respond, and close them in the same PR when
+  possible. The deployment contract is `docs/DEPLOY.md`; keep it true when changing the
+  server's start-up, health endpoint, ports, or anything written to disk.
 
 - Owner has pre-approved merging all PRs from the AI session. Open a PR, run checks, merge it.
 - Every feature ships with unit tests. No PR with red CI.

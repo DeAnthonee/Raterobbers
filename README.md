@@ -5,6 +5,7 @@ A fast, top-down, grid-based online heist game for the web. Teams of burglars ra
 - **Game spec:** [docs/GAME_SPEC.md](docs/GAME_SPEC.md)
 - **Roadmap / tasks:** [docs/TASKS.md](docs/TASKS.md)
 - **Project journal:** [docs/JOURNAL.md](docs/JOURNAL.md)
+- **Deployment contract:** [docs/DEPLOY.md](docs/DEPLOY.md)
 - **AI session hand-off:** [CLAUDE.md](CLAUDE.md)
 
 ## Layout
@@ -38,6 +39,6 @@ docker build -t eye-spy .
 docker run -p 2567:2567 eye-spy      # open http://localhost:2567
 ```
 
-Any host that runs a Docker image (Fly.io, Railway, Render, a VPS) works. Set `PORT` if the platform assigns one. The client connects to the same origin it was served from; to point a separately hosted client at another server, build it with `VITE_SERVER_URL=wss://your-server`.
+Without Docker: `pnpm install --frozen-lockfile && pnpm build && PORT=3400 pnpm start`. Any host that runs Node 22 or a Docker image works. Set `PORT` if the platform assigns one; `GET /healthz` reports version and live match counts. The client connects to the same origin it was served from; to point a separately hosted client at another server, build it with `VITE_SERVER_URL=wss://your-server`.
 
 > This repository previously held an Android mini-game; it was removed in M0 and remains in git history.

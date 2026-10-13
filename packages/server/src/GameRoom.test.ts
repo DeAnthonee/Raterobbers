@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { boot, type ColyseusTestServer } from '@colyseus/testing';
+import { ColyseusTestServer } from '@colyseus/testing';
 import type { Room as SdkRoom } from '@colyseus/sdk';
 import type { GameMap, WireRoomState } from '@eyespy/shared';
 import { GAME_ROOM, server } from './app';
@@ -95,7 +95,11 @@ describe('GameRoom', () => {
   let colyseus: ColyseusTestServer;
 
   beforeAll(async () => {
-    colyseus = await boot(server);
+    // Loopback only, random port: the suite gates deploys and must not collide with the
+    // live game or with another test run on the same machine.
+    const port = 20_000 + Math.floor(Math.random() * 20_000);
+    await server.listen(port, '127.0.0.1');
+    colyseus = new ColyseusTestServer(server);
   }, 30_000);
   afterAll(async () => {
     await colyseus.shutdown();
@@ -152,6 +156,32 @@ describe('GameRoom', () => {
     expect(room.match).not.toBeNull();
     return map;
   }
+
+  it('serves /healthz with version and live counts', async () => {
+    const before = await colyseus.http.get('/healthz');
+    expect(before.statusCode).toBe(200);
+    const body = before.data as {
+      ok: boolean;
+      version: string;
+      playing: number;
+      rooms: number;
+      players: number;
+    };
+    expect(body.ok).toBe(true);
+    expect(body.version).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(body.playing).toBe(0);
+    const { room, host } = await readyLobby();
+    await startMatch(room, host);
+    const during = (await colyseus.http.get('/healthz')).data as {
+      playing: number;
+      rooms: number;
+      players: number;
+    };
+    expect(during.playing).toBe(1);
+    expect(during.rooms).toBe(1);
+    expect(during.players).toBe(2);
+    expect(before.headers['cache-control']).toBe('no-store');
+  });
 
   it('creates a private room with a 5-letter join code used as the room id', async () => {
     const room = await createRoom();

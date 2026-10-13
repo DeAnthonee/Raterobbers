@@ -24,6 +24,7 @@ import {
   type TickEvent,
 } from '@eyespy/shared';
 import { Room, type Client, type Deferred } from '@colyseus/core';
+import { registerRoom, unregisterRoom } from './registry';
 import { LobbyPlayerSchema, RoomStateSchema } from './schema';
 import { syncConfig, syncMatch, toPublicWire } from './sync';
 
@@ -103,6 +104,7 @@ export class GameRoom extends Room<{ state: RoomStateSchema }> {
     syncMatch(emptyWireMatch(), this.state.match);
     // Only reachable by join code, never by `join('game')` matchmaking.
     await this.setPrivate(true);
+    registerRoom(this);
 
     this.onMessage('setName', (client, msg: unknown) => {
       const entry = this.requireLobbyPhase(client);
@@ -239,6 +241,7 @@ export class GameRoom extends Room<{ state: RoomStateSchema }> {
   }
 
   override async onDispose(): Promise<void> {
+    unregisterRoom(this);
     await this.presence.srem(CODES_CHANNEL, this.roomId);
   }
 
