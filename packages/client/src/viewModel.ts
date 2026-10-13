@@ -110,7 +110,9 @@ export function resultModel(state: WireRoomState, sessionId: string): ResultMode
   const winner = match.hasResult && match.resultWinnerTeamId >= 0 ? match.resultWinnerTeamId : null;
   const winnerTeam = match.teams.find((t) => t.id === winner);
   let headline = 'Draw';
-  if (winnerTeam) {
+  if (match.teams.length === 1) {
+    headline = 'Practice over';
+  } else if (winnerTeam) {
     headline = me && me.teamId === winnerTeam.id ? 'You win!' : `${winnerTeam.name} wins`;
   }
   const rows = match.teams

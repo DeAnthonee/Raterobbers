@@ -24,7 +24,8 @@ export const LIMITS = {
   mapCols: { min: 1, max: 6 },
   roomSize: { min: 6, max: 24 },
   doorWidth: { min: 1, max: 4 },
-  teamCount: { min: 2, max: 4 },
+  /** 1 is solo practice (one team, no opponents); real matches need 2+. */
+  teamCount: { min: 1, max: 4 },
   teamSize: { min: 1, max: 4 },
   gemCount: { min: 1, max: 99 },
   matchDurationSec: { min: 30, max: 1800 },

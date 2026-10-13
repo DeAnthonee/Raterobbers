@@ -260,17 +260,32 @@ describe('GameRoom', () => {
     await vi.waitFor(() => expect(wire(guest).config.countdownSec).toBe(1));
   });
 
-  it('refuses to start until everyone is ready and two teams have players', async () => {
+  it('refuses to start until everyone is ready, and with 2+ players on one team', async () => {
     const room = await createRoom();
     const host = await join(room, 'Host');
     const err1 = host.waitForMessage('error');
     await sendAndWait(room, host, 'start');
     expect(((await err1) as { message: string }).message).toMatch(/ready/);
+    const guest = await join(room, 'Guest');
+    await sendAndWait(room, guest, 'setTeam', { teamId: 0 }); // both on team 0
     await sendAndWait(room, host, 'ready', { ready: true });
+    await sendAndWait(room, guest, 'ready', { ready: true });
     const err2 = host.waitForMessage('error');
     await sendAndWait(room, host, 'start');
     expect(((await err2) as { message: string }).message).toMatch(/two teams/);
     expect(room.match).toBeNull();
+  });
+
+  it('a lone player can start a solo practice match', async () => {
+    const room = await createRoom();
+    const host = await join(room, 'Host');
+    await sendAndWait(room, host, 'setConfig', FAST);
+    await sendAndWait(room, host, 'ready', { ready: true });
+    await startMatch(room, host);
+    expect(room.match?.teams).toHaveLength(1);
+    expect(room.match?.players).toHaveLength(1);
+    expect(room.matchConfig?.teamCount).toBe(1);
+    expect(room.state.phase).toBe('playing');
   });
 
   it('starts a match: sends the map, spawns players, locks the room, syncs state', async () => {

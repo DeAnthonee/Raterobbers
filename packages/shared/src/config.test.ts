@@ -71,6 +71,11 @@ describe('validateConfig', () => {
     expect(validateConfig(makeConfig())).toEqual([]);
   });
 
+  it('allows a single team for solo practice', () => {
+    expect(validateConfig(makeConfig({ teamCount: 1, teamSize: 1 }))).toEqual([]);
+    expect(validateConfig(makeConfig({ teamCount: 0 })).map((e) => e.field)).toContain('teamCount');
+  });
+
   it('rejects even gem counts', () => {
     const errors = validateConfig(makeConfig({ gemCount: 8 }));
     expect(errors.map((e) => e.field)).toContain('gemCount');

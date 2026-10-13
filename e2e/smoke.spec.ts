@@ -270,3 +270,28 @@ test('a phone can play with the on-screen controls', async ({ browser }) => {
   await expect(phone.locator('#touch')).toBeHidden();
   expect(errors).toEqual([]);
 });
+
+test('a lone player can start a solo practice run', async ({ browser }) => {
+  const solo = await newPage(browser);
+  await solo.goto('/');
+  await solo.fill('#name', 'Solo');
+  await solo.click('#create');
+  await expect(solo.locator('.code')).toHaveText(/^[A-Z]{5}$/);
+  await expect(solo.locator('#start')).toBeDisabled();
+  await solo.click('#ready');
+  await expect(solo.locator('#start')).toHaveText(/solo practice/i);
+  await expect(solo.locator('#start')).toBeEnabled();
+  await solo.click('#start');
+  await expect.poll(() => hook(solo, (h) => h.state()?.phase)).toBe('playing');
+  await expect(solo.locator('canvas')).toBeVisible();
+  const start = await me(solo);
+  await solo.click('canvas');
+  for (const key of ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp']) {
+    await solo.keyboard.down(key);
+    await solo.waitForTimeout(400);
+    await solo.keyboard.up(key);
+    const now = await me(solo);
+    if (now.x !== start.x || now.y !== start.y) break;
+  }
+  expect(await me(solo)).not.toEqual(expect.objectContaining({ x: start.x, y: start.y }));
+});

@@ -126,7 +126,8 @@ export class Overlay {
     const activeValue = active?.value ?? '';
     const everyoneReady = players.length > 0 && players.every((p) => p.ready);
     const teamsWithPlayers = new Set(players.map((p) => p.teamId)).size;
-    const canStart = everyoneReady && teamsWithPlayers >= 2;
+    const solo = players.length === 1;
+    const canStart = everyoneReady && (teamsWithPlayers >= 2 || solo);
     const teams = Array.from({ length: state.config.teamCount }, (_, id) => id);
     const teamHtml = teams
       .map((id) => {
@@ -164,7 +165,7 @@ export class Overlay {
             <button id="leave" class="ghost">Leave</button>
           </div>
         </div>
-        <p class="muted">Share the code. ${isHost ? 'You are the host: tune the match and press Start when everyone is ready.' : 'Waiting for the host to start.'}</p>
+        <p class="muted">Share the code. ${isHost ? (solo ? 'Alone? Ready up and start a solo practice run, or wait for friends to join.' : 'You are the host: tune the match and press Start when everyone is ready.') : 'Waiting for the host to start.'}</p>
         <div class="teams">${teamHtml}</div>
         <details class="config" ${isHost ? 'open' : ''}>
           <summary>Match settings</summary>
@@ -179,7 +180,7 @@ export class Overlay {
         </details>
         <div class="row">
           <button id="ready" class="${me?.ready ? '' : 'primary'}">${me?.ready ? 'Not ready' : 'Ready'}</button>
-          ${isHost ? `<button id="start" class="primary" ${canStart ? '' : 'disabled'}>Start</button>` : ''}
+          ${isHost ? `<button id="start" class="primary" ${canStart ? '' : 'disabled'}>${solo ? 'Start solo practice' : 'Start'}</button>` : ''}
         </div>
       </div>`);
     this.lobbyKey = key;
