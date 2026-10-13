@@ -3,10 +3,10 @@
  * network goes through here so scenes never touch the SDK directly.
  */
 import { Client, CloseCode, type Room } from '@colyseus/sdk';
-import type { GameMap, InputEvent, TickEvent, WireRoomState } from '@eyespy/shared';
+import type { GameMap, InputEvent, TickEvent, WireRoomState } from '@raterobbers/shared';
 
 export const GAME_ROOM = 'game';
-const TOKEN_KEY = 'eyespy.reconnectionToken';
+const TOKEN_KEY = 'raterobbers.reconnectionToken';
 
 export function serverEndpoint(
   location: Pick<Location, 'protocol' | 'hostname' | 'port'> = window.location,

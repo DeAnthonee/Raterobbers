@@ -1,4 +1,4 @@
-// Bundle the server for production. Workspace packages (@eyespy/*) are inlined because
+// Bundle the server for production. Workspace packages (@raterobbers/*) are inlined because
 // they ship TypeScript source; everything from node_modules stays external.
 import { build } from 'esbuild';
 
@@ -17,7 +17,7 @@ await build({
       name: 'externalize-node-modules',
       setup(b) {
         b.onResolve({ filter: /^[^./]/ }, (args) =>
-          args.path.startsWith('@eyespy/') ? undefined : { path: args.path, external: true },
+          args.path.startsWith('@raterobbers/') ? undefined : { path: args.path, external: true },
         );
       },
     },

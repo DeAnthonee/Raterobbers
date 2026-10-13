@@ -1,4 +1,4 @@
-# Eye Spy — Task List
+# Rate Robbers — Task List
 
 Mirror of the working task list. Update when a task changes state. Milestones are defined
 in `docs/GAME_SPEC.md` §11.
@@ -20,6 +20,14 @@ in `docs/GAME_SPEC.md` §11.
       interpolation, unit tests for non-canvas logic
 - [x] **M4** — Playable build: one-command local run, Dockerfile for server, static client build,
       deploy notes, Playwright smoke test (two clients join and move), template library at 14 (toward 20)
+
+## Friends-test prep (done)
+
+- [x] Rename to Rate Robbers (repo `DeAnthonee/Raterobbers`, hostname raterobbers.deanthoneeking.com)
+- [x] Phone touch controls (d-pad + SEARCH, slide-to-turn, safe-area aware, rotate hint in portrait)
+- [x] Invite links (`/?code=ABCDE`, share sheet / clipboard / prompt fallback)
+- [x] Deployment contract (`docs/DEPLOY.md`): health endpoint, cache headers, 0.0.0.0 bind
+- [x] End-to-end suite runs against the production build
 
 ## Ongoing
 

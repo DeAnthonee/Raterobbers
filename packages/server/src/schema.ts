@@ -1,7 +1,7 @@
 /**
  * Colyseus state schema for a game room. Mirrors the shared wire format
- * (`@eyespy/shared` `WireRoomState`) field for field so clients can read `state.toJSON()`
- * as a `WireRoomState`. All game logic lives in @eyespy/shared; this file is just shape.
+ * (`@raterobbers/shared` `WireRoomState`) field for field so clients can read `state.toJSON()`
+ * as a `WireRoomState`. All game logic lives in @raterobbers/shared; this file is just shape.
  */
 import { schema, t, type SchemaType } from '@colyseus/schema';
 

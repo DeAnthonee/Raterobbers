@@ -2,7 +2,8 @@
  * HTML overlays for the menus (home, lobby, results) and toasts. The match itself is
  * rendered by Phaser; these sit on top of the canvas.
  */
-import { LIMITS, type MatchConfig, type WireRoomState } from '@eyespy/shared';
+import { LIMITS, type MatchConfig, type WireRoomState } from '@raterobbers/shared';
+import { inviteLink } from './invite';
 import { resultModel } from './viewModel';
 
 const TEAM_NAMES = ['Red', 'Blue', 'Green', 'Yellow'];
@@ -53,35 +54,35 @@ export class Overlay {
     this.toastTimer = window.setTimeout(() => el?.classList.remove('visible'), 3000);
   }
 
-  showHome(handlers: {
-    onCreate(name: string): void;
-    onJoin(code: string, name: string): void;
-  }): void {
+  showHome(
+    handlers: { onCreate(name: string): void; onJoin(code: string, name: string): void },
+    prefillCode = '',
+  ): void {
     const saved = (() => {
       try {
-        return localStorage.getItem('eyespy.name') ?? '';
+        return localStorage.getItem('raterobbers.name') ?? '';
       } catch {
         return '';
       }
     })();
     const el = this.show(`
       <div class="panel">
-        <h1>Eye Spy</h1>
+        <h1>Rate Robbers</h1>
         <p class="muted">Search the mansion, grab the gems, hold the most when the clock runs out.</p>
         <label>Your name <input id="name" maxlength="16" value="${esc(saved)}" placeholder="Burglar" /></label>
         <div class="row">
           <button id="create" class="primary">Create match</button>
         </div>
         <div class="row">
-          <input id="code" maxlength="5" placeholder="JOIN CODE" autocapitalize="characters" />
+          <input id="code" maxlength="5" placeholder="JOIN CODE" autocapitalize="characters" value="${esc(prefillCode)}" />
           <button id="join">Join</button>
         </div>
-        <p class="muted small">Move: arrows / WASD / D-pad. Search: Space / Enter / A button.</p>
+        <p class="muted small">Move: arrows / WASD / D-pad / on-screen pad. Search: Space / Enter / A button / SEARCH.</p>
       </div>`);
     const name = (): string => {
       const v = (el.querySelector('#name') as HTMLInputElement).value.trim();
       try {
-        localStorage.setItem('eyespy.name', v);
+        localStorage.setItem('raterobbers.name', v);
       } catch {
         /* ignore */
       }
@@ -100,6 +101,7 @@ export class Overlay {
     el.querySelector('#code')?.addEventListener('keydown', (e) => {
       if ((e as KeyboardEvent).key === 'Enter') join();
     });
+    if (prefillCode) (el.querySelector('#name') as HTMLInputElement | null)?.focus();
   }
 
   showLobby(
@@ -157,7 +159,10 @@ export class Overlay {
       <div class="panel wide">
         <div class="lobby-head">
           <h1>Lobby <span class="code">${esc(state.joinCode)}</span></h1>
-          <button id="leave" class="ghost">Leave</button>
+          <div class="row">
+            <button id="invite" class="ghost">Copy invite link</button>
+            <button id="leave" class="ghost">Leave</button>
+          </div>
         </div>
         <p class="muted">Share the code. ${isHost ? 'You are the host: tune the match and press Start when everyone is ready.' : 'Waiting for the host to start.'}</p>
         <div class="teams">${teamHtml}</div>
@@ -168,6 +173,7 @@ export class Overlay {
             ${num('mapRows', 'Room rows')}${num('mapCols', 'Room columns')}
             ${num('roomSize', 'Room size (tiles)')}${num('gemCount', 'Gems (odd)', 2)}
             ${num('matchDurationSec', 'Match seconds')}${num('overtimeCapSec', 'Overtime seconds')}
+            ${num('reconnectGraceSec', 'Reconnect grace seconds')}
             ${num('searchDurationMs', 'Search ms')}${num('moveIntervalMs', 'Step ms')}
           </div>
         </details>
@@ -197,6 +203,10 @@ export class Overlay {
     el.querySelector('#ready')?.addEventListener('click', () => handlers.onReady(!me?.ready));
     el.querySelector('#start')?.addEventListener('click', () => handlers.onStart());
     el.querySelector('#leave')?.addEventListener('click', () => handlers.onLeave());
+    el.querySelector('#invite')?.addEventListener(
+      'click',
+      () => void this.shareInvite(state.joinCode),
+    );
   }
 
   showResults(
@@ -235,6 +245,26 @@ export class Overlay {
       </div>`);
     el.querySelector('#rematch')?.addEventListener('click', () => handlers.onRematch());
     el.querySelector('#leave')?.addEventListener('click', () => handlers.onLeave());
+  }
+
+  /** Phones get the native share sheet; desktops the clipboard; plain-http origins a prompt. */
+  async shareInvite(code: string): Promise<void> {
+    const link = inviteLink(window.location.origin, code);
+    const nav = navigator as Navigator & { share?: (data: { url: string }) => Promise<void> };
+    if (typeof nav.share === 'function') {
+      await nav.share({ url: link }).catch(() => undefined); // user cancelled: fine
+      return;
+    }
+    if (nav.clipboard && window.isSecureContext) {
+      try {
+        await nav.clipboard.writeText(link);
+        this.toast('Invite link copied');
+        return;
+      } catch {
+        /* fall through */
+      }
+    }
+    window.prompt('Copy this invite link', link);
   }
 
   showConnecting(text: string): void {

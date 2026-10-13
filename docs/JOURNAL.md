@@ -1,4 +1,4 @@
-# Eye Spy — Project Journal
+# Rate Robbers — Project Journal
 
 A running log for humans and AI sessions. Newest entries at the bottom. Each entry says what
 landed, what was decided and why, and anything a future session should know.
@@ -34,14 +34,14 @@ unit tests on everything, a reviewer agent pass before merging, and this journal
 ## 2026-10-12 — M0: repo reset and monorepo scaffold
 
 **What landed.** Removed the Android/Gradle project (still in git history before
-commit `49a59bc`). Created the pnpm workspace with `@eyespy/shared`, `@eyespy/server`,
-`@eyespy/client`; strict TypeScript; ESLint 10 flat config; Prettier; Vitest 5; a GitHub
+commit `49a59bc`). Created the pnpm workspace with `@raterobbers/shared`, `@raterobbers/server`,
+`@raterobbers/client`; strict TypeScript; ESLint 10 flat config; Prettier; Vitest 5; a GitHub
 Actions workflow running lint, format check, typecheck, tests, and build; `CLAUDE.md`,
 this journal, and `docs/TASKS.md`.
 
 **Decisions.**
 
-- `@eyespy/shared` is consumed from source (`exports: ./src/index.ts`). Vite, Vitest, and
+- `@raterobbers/shared` is consumed from source (`exports: ./src/index.ts`). Vite, Vitest, and
   `tsx` all handle TypeScript source directly, so no build step is needed in dev. The
   server's production build bundles shared in with esbuild. This keeps the dev loop simple.
 - Pinned TypeScript 5.9 rather than the new TypeScript 7 (native) release to avoid
@@ -157,7 +157,7 @@ Both were test mistakes, not code bugs. 62 tests pass.
 - Spawn corner is now chosen by seed (`SEED_SALT_SPAWN`), so team 0 is not always top-left.
 - `dropAllGems` falls back to the player's own tile if the room somehow has no floor.
 - The replay test now drives scripted bots that path to gems (`pathTo` in
-  `@eyespy/shared/testing`), hold Action, and get their gems dropped and re-collected, and
+  `@raterobbers/shared/testing`), hold Action, and get their gems dropped and re-collected, and
   pins a fingerprint for one seed. Tests added for 30 Hz timing, turning in place,
   contested searches on different ticks, empty teams, door-tile scatter, overtime won by a
   real search, overtime draws, forfeit, unknown input ids, non-mutating input reduction.
@@ -187,7 +187,7 @@ Both were test mistakes, not code bugs. 62 tests pass.
   check when the grace expires or a player leaves, `rematch` back to the lobby with a new
   seed. Teams with no players are dropped from the match config at start time.
 - `app.ts` / `index.ts`: `defineServer` with one room type `game`; `PORT` env (default 2567).
-- `build.mjs`: esbuild bundles `@eyespy/*` into `dist/index.js` and leaves node_modules
+- `build.mjs`: esbuild bundles `@raterobbers/*` into `dist/index.js` and leaves node_modules
   external. Needed because Node's built-in type stripping loads `shared/src/index.ts` but
   cannot resolve its extension-less relative imports.
 
@@ -249,7 +249,7 @@ Both were test mistakes, not code bugs. 62 tests pass.
   count, floor gems, my team's searched overlay, search progress bar, HUD, a minimap of
   rooms, countdown and sudden-death banners. Camera follows the local player.
 - `main.ts`: phase router. Lobby/results are overlays; countdown/playing/overtime run the
-  match scene. A dev-only `window.__eyespy` hook exposes the wire state for end-to-end tests.
+  match scene. A dev-only `window.__raterobbers` hook exposes the wire state for end-to-end tests.
 
 **Lessons.**
 
@@ -318,3 +318,31 @@ Both were test mistakes, not code bugs. 62 tests pass.
   hosting contract is `docs/DEPLOY.md` and the `[OPS]` issue rule is in `CLAUDE.md`.
 - The owner created `DeAnthonee/Raterobbers` (public) as the game's home. The complete
   history was pushed there from `Eye_Spy`; this journal continues in the new repo.
+
+## 2026-10-13 — Rate Robbers: rename, touch controls, invite links
+
+- The game is now **Rate Robbers** everywhere a player or reader sees it (page title, home,
+  server log, docs). Workspace packages are `@raterobbers/*`, the join-code Presence channel
+  and browser storage keys follow suit. The Phase 1 journal entries above keep the old name
+  as history.
+- **Touch controls** (`packages/client/src/touch.ts`): a d-pad and a SEARCH button shown
+  during a match on coarse-pointer devices (`(pointer: coarse)`), merged with keyboard and
+  gamepad each frame. One key per pointer, so a thumb on a direction and another on SEARCH
+  work together; releasing or losing a pointer releases its key.
+- **Invite links** (`packages/client/src/invite.ts`): `/?code=ABCDE`. With a saved name the
+  friend joins immediately; otherwise Home opens with the code prefilled. The lobby has a
+  "Copy invite link" button. The code is stripped from the address bar after use.
+- End-to-end tests cover both: an emulated Pixel 7 joins and walks with the on-screen d-pad;
+  an invite link lands a friend in the lobby with and without a saved name.
+
+**Review pass (touch controls and invite links).** Applied: the share button silently did
+nothing on plain-http origins (clipboard needs a secure context), so it now uses the native
+share sheet on phones, the clipboard where allowed, and a prompt otherwise; the d-pad
+could not change direction by sliding a thumb (pointer capture pins the pointer to the first
+button), fixed by hit-testing on `pointermove`; the minimap moves to the top-left when the
+d-pad is on screen; a rotate-your-phone overlay in portrait on coarse-pointer devices;
+`touch-action: none` on the page, safe-area insets, larger d-pad cells; invite failures keep
+the code on Home and an invite tapped mid-match resumes the seat first; the join-code length
+is one shared constant (`JOIN_CODE_LENGTH`); reconnect grace is editable in the lobby.
+Known gaps: no DOM-level unit tests for the control wiring (the Pixel 7 end-to-end test
+covers it), and the e2e taps dispatch pointer events rather than real touches.

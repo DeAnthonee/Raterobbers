@@ -1,4 +1,4 @@
-import type { Dir, InputEvent } from '@eyespy/shared';
+import type { Dir, InputEvent } from '@raterobbers/shared';
 
 /** Raw held state sampled once per frame from keyboard and/or gamepad. */
 export interface RawInput {

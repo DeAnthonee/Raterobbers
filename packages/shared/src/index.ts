@@ -1,5 +1,5 @@
 /**
- * @eyespy/shared — deterministic game rules.
+ * @raterobbers/shared — deterministic game rules.
  *
  * Everything here must be free of DOM and Node dependencies so the same code
  * runs on the server (authoritative) and in the client (display/prediction),

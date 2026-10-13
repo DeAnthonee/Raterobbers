@@ -38,7 +38,7 @@ importers:
       '@colyseus/sdk':
         specifier: 0.18.5
         version: 0.18.5(@colyseus/core@0.18.18)(typescript@5.9.3)(zod@4.6.6)
-      '@eyespy/shared':
+      '@raterobbers/shared':
         specifier: workspace:*
         version: link:../shared
       phaser:
@@ -60,7 +60,7 @@ importers:
       '@colyseus/ws-transport':
         specifier: 0.18.4
         version: 0.18.4(@colyseus/core@0.18.18)(express@5.3.0)
-      '@eyespy/shared':
+      '@raterobbers/shared':
         specifier: workspace:*
         version: link:../shared
       express:

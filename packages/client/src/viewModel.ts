@@ -9,7 +9,7 @@ import {
   type WireMatch,
   type WirePlayer,
   type WireRoomState,
-} from '@eyespy/shared';
+} from '@raterobbers/shared';
 
 export interface TeamScoreRow {
   teamId: number;

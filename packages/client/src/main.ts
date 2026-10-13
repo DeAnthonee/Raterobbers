@@ -1,12 +1,16 @@
 import Phaser from 'phaser';
-import type { GameMap, WireRoomState } from '@eyespy/shared';
+import type { GameMap, WireRoomState } from '@raterobbers/shared';
 import { CloseCode } from '@colyseus/sdk';
 import { Net, storedToken, type Connection } from './net';
 import { BootScene } from './scenes/BootScene';
 import { MatchScene, type MatchSceneData } from './scenes/MatchScene';
+import { parseInviteCode } from './invite';
+import { TouchControls, isTouchDevice } from './touch';
 import { Overlay } from './ui';
 
 const overlay = new Overlay(document.getElementById('overlay') as HTMLElement);
+const touch = new TouchControls(document.body);
+const touchEnabled = isTouchDevice();
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,
@@ -32,6 +36,8 @@ let inputsSent = 0;
 function stopMatchScene(): void {
   if (game.scene.isActive('match')) game.scene.stop('match');
   matchRunning = false;
+  touch.hide();
+  document.body.classList.remove('in-match');
 }
 
 function render(state: WireRoomState): void {
@@ -54,9 +60,13 @@ function render(state: WireRoomState): void {
     case 'playing':
     case 'overtime':
       overlay.hide();
+      if (touchEnabled) touch.show();
+      document.body.classList.add('in-match');
       startMatchSceneIfReady();
       break;
     case 'ended':
+      touch.hide();
+      document.body.classList.remove('in-match');
       startMatchSceneIfReady();
       overlay.showResults(state, sessionId, {
         onRematch: () => conn?.send('rematch', {}),
@@ -69,7 +79,7 @@ function render(state: WireRoomState): void {
 function startMatchSceneIfReady(): void {
   if (matchRunning || !conn || !map) return;
   matchRunning = true;
-  const data: MatchSceneData = { conn, map };
+  const data: MatchSceneData = { conn, map, touch: touch.state };
   game.scene.start('match', data);
 }
 
@@ -112,29 +122,68 @@ async function leave(): Promise<void> {
   showHome();
 }
 
-function showHome(): void {
-  overlay.showHome({
-    onCreate: (name) => void connect(() => net.create(name), 'Creating match…'),
-    onJoin: (code, name) => void connect(() => net.join(code, name), 'Joining…'),
-  });
+function showHome(prefillCode = ''): void {
+  overlay.showHome(
+    {
+      onCreate: (name) => void connect(() => net.create(name), 'Creating match…'),
+      onJoin: (code, name) => void connect(() => net.join(code, name), 'Joining…', code),
+    },
+    prefillCode,
+  );
 }
 
-async function connect(make: () => Promise<Connection>, text: string): Promise<void> {
+/**
+ * Invite link (`/?code=ABCDE`): a player who still holds a seat resumes it; otherwise join
+ * straight away with a saved name, or open Home with the code prefilled.
+ */
+async function handleInvite(): Promise<boolean> {
+  const code = parseInviteCode(window.location.search);
+  if (!code) return false;
+  try {
+    history.replaceState(null, '', window.location.pathname);
+  } catch {
+    // Sandboxed in-app browsers can refuse; the code just stays in the address bar.
+  }
+  if (storedToken()) {
+    overlay.showConnecting('Reconnecting…');
+    const resumed = await net.tryReconnect();
+    if (resumed) {
+      attach(resumed);
+      return true;
+    }
+  }
+  let savedName = '';
+  try {
+    savedName = localStorage.getItem('raterobbers.name') ?? '';
+  } catch {
+    /* ignore */
+  }
+  if (savedName) await connect(() => net.join(code, savedName), `Joining ${code}…`, code);
+  else showHome(code);
+  return true;
+}
+
+async function connect(
+  make: () => Promise<Connection>,
+  text: string,
+  fallbackCode = '',
+): Promise<void> {
   overlay.showConnecting(text);
   try {
     attach(await make());
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     overlay.toast(
-      /locked|not found|already started/i.test(message)
-        ? 'That match is not open to join'
+      /locked|not found|already started|full/i.test(message)
+        ? `That match is not open to join (${message})`
         : `Could not connect: ${message}`,
     );
-    showHome();
+    showHome(fallbackCode);
   }
 }
 
 async function boot(): Promise<void> {
+  if (await handleInvite()) return;
   if (!storedToken()) {
     showHome();
     return;
@@ -145,12 +194,14 @@ async function boot(): Promise<void> {
   else showHome();
 }
 
-// Dev/test hook: lets end-to-end tests read the current wire state.
-if (import.meta.env.DEV) {
-  (window as unknown as { __eyespy: unknown }).__eyespy = {
+// Dev/test hook: lets end-to-end tests read the current wire state. Read-only; enabled in
+// dev builds and in builds made with VITE_E2E=1 (the e2e suite runs the production bundle).
+if (import.meta.env.DEV || import.meta.env.VITE_E2E === '1') {
+  (window as unknown as { __raterobbers: unknown }).__raterobbers = {
     state: () => conn?.state() ?? null,
     sessionId: () => conn?.sessionId ?? null,
     inputsSent: () => inputsSent,
+    touchEnabled: () => touchEnabled,
   };
 }
 

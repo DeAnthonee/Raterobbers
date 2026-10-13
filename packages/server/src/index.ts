@@ -1,4 +1,4 @@
-import { SHARED_VERSION } from '@eyespy/shared';
+import { SHARED_VERSION } from '@raterobbers/shared';
 import { BUILD_TIME, VERSION, clientDistDir, server } from './app';
 
 const port = Number.parseInt(process.env.PORT ?? '2567', 10);
@@ -13,7 +13,7 @@ server
   .listen(port, host)
   .then(() => {
     console.log(
-      `Eye Spy server v${VERSION} (build ${BUILD_TIME}, shared ${SHARED_VERSION}) listening on ${host}:${port}; client: ${clientDistDir() ?? 'not served'}`,
+      `Rate Robbers server v${VERSION} (build ${BUILD_TIME}, shared ${SHARED_VERSION}) listening on ${host}:${port}; client: ${clientDistDir() ?? 'not served'}`,
     );
   })
   .catch((err: unknown) => {

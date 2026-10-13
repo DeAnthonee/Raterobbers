@@ -1,5 +1,6 @@
 import {
   IDLE_INPUT,
+  JOIN_CODE_LENGTH,
   LIMITS,
   MAX_SEED,
   applyInputEvent,
@@ -22,15 +23,14 @@ import {
   type PlayerInput,
   type TeamSetup,
   type TickEvent,
-} from '@eyespy/shared';
+} from '@raterobbers/shared';
 import { Room, type Client, type Deferred } from '@colyseus/core';
 import { registerRoom, unregisterRoom } from './registry';
 import { LobbyPlayerSchema, RoomStateSchema } from './schema';
 import { syncConfig, syncMatch, toPublicWire } from './sync';
 
 const CODE_LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-const CODE_LENGTH = 5;
-const CODES_CHANNEL = '$eyespy:joinCodes';
+const CODES_CHANNEL = '$raterobbers:joinCodes';
 const TEAM_NAMES = ['Red', 'Blue', 'Green', 'Yellow'];
 const MAX_NAME_LENGTH = 16;
 /**
@@ -476,7 +476,7 @@ export class GameRoom extends Room<{ state: RoomStateSchema }> {
   private async generateJoinCode(): Promise<string> {
     for (let attempt = 0; attempt < 50; attempt++) {
       let code = '';
-      for (let i = 0; i < CODE_LENGTH; i++) {
+      for (let i = 0; i < JOIN_CODE_LENGTH; i++) {
         code += CODE_LETTERS.charAt(Math.floor(Math.random() * CODE_LETTERS.length));
       }
       // LocalPresence's sadd returns nothing, so check membership first. With Redis the
