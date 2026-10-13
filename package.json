@@ -1,9 +1,9 @@
 {
-  "name": "eye-spy",
+  "name": "rate-robbers",
   "private": true,
   "type": "module",
   "version": "0.1.0",
-  "description": "Eye Spy: a grid-based online heist game. See docs/GAME_SPEC.md.",
+  "description": "Rate Robbers: a grid-based online heist game. See docs/GAME_SPEC.md.",
   "packageManager": "pnpm@10.28.0",
   "engines": {
     "node": ">=22"

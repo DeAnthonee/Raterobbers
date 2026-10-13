@@ -1,6 +1,6 @@
 /**
  * Test helpers shared across the rules test files, also importable by the server and client
- * test suites via `@eyespy/shared/testing`. Not part of the runtime API.
+ * test suites via `@raterobbers/shared/testing`. Not part of the runtime API.
  */
 import type { MatchConfig } from './config';
 import { bfsReachable, idx } from './grid';

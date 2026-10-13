@@ -1,4 +1,4 @@
-# Eye Spy — Game Spec
+# Rate Robbers — Game Spec
 
 **Status:** v1 (MVP scope). Living document; the design conversation that produced it is summarized here so an engineer can build from this file alone.
 

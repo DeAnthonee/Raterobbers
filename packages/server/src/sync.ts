@@ -2,7 +2,7 @@
  * Copy shared plain state into the Colyseus schema, writing only fields that changed so
  * delta patches stay small. Pure functions over (plain, schema) pairs; unit-tested.
  */
-import type { MatchConfig, WireGem, WireMatch, WirePlayer, WireTeam } from '@eyespy/shared';
+import type { MatchConfig, WireGem, WireMatch, WirePlayer, WireTeam } from '@raterobbers/shared';
 import type { ArraySchema, MapSchema } from '@colyseus/schema';
 import {
   GemSchema,

@@ -1,6 +1,6 @@
 # Deployment contract
 
-How to run Eye Spy on a host that auto-deploys from GitHub. Written for the Mac mini +
+How to run Rate Robbers on a host that auto-deploys from GitHub. Written for the Mac mini +
 Cloudflare Tunnel setup; nothing here is Mac-specific.
 
 | Item        | Value                                                                                                                                                                                                                                                                                                                                           |
@@ -16,7 +16,7 @@ Cloudflare Tunnel setup; nothing here is Mac-specific.
 | Tunnel      | WebSockets required (Colyseus over the `ws` library, `@colyseus/ws-transport`). The app expects the root of its hostname; no path prefix. The client connects to the origin it was served from, so `wss://raterobbers.deanthoneeking.com` works with no client config.                                                                          |
 | Caching     | `/` and `/index.html`: `Cache-Control: no-cache`. Everything under `/assets/` is content-hashed by Vite (new names every build) and served `public, max-age=31536000, immutable`. Equivalent to `?v=` busting, with no stale-code risk.                                                                                                         |
 | Restarts    | All state is in memory; a restart ends every live match (players see "Disconnected" and return to Home). On `SIGTERM` Colyseus shuts down gracefully (disconnects clients, disposes rooms) well within 20 s. Prefer restarting when `/healthz` reports `playing: 0`; if a match is in progress, waiting a few minutes is kind but not required. |
-| Tests       | `pnpm check` (lint, format check, typecheck, unit tests for all packages). The server suite boots a Colyseus server on a random port in 20000–39999 on `127.0.0.1`. `pnpm e2e` (Playwright, needs Chromium) also exists; CI runs it, but it uses fixed ports 2567 and 5173 so it is not part of the deploy gate.                                |
+| Tests       | `pnpm check` (lint, format check, typecheck, unit tests for all packages). The server suite boots a Colyseus server on a random port in 20000–39999 on `127.0.0.1`. `pnpm e2e` (Playwright, needs Chromium) also exists; CI runs it, but it builds and binds a server on fixed port 2567 so it is not part of the deploy gate.                  |
 | Ops channel | GitHub Issues are enabled. Issues titled `[OPS] …` are reports from the hosting machine's monitors. Standing rule for every work session: check open `[OPS]` issues first, fix or respond, and close them in the same PR when possible.                                                                                                         |
 
 ## Checklist for a fresh host

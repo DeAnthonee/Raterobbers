@@ -1,9 +1,9 @@
 {
-  "name": "@eyespy/shared",
+  "name": "@raterobbers/shared",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Pure, deterministic game rules for Eye Spy. No DOM, no Node APIs.",
+  "description": "Pure, deterministic game rules for Rate Robbers. No DOM, no Node APIs.",
   "exports": {
     ".": "./src/index.ts",
     "./testing": "./src/testing.ts"

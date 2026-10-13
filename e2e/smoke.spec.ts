@@ -1,4 +1,11 @@
-import { expect, test, type Page } from '@playwright/test';
+import {
+  devices,
+  expect,
+  test,
+  type Browser,
+  type BrowserContextOptions,
+  type Page,
+} from '@playwright/test';
 
 /** Shape of the dev-only window hook exposed by packages/client/src/main.ts. */
 interface Hook {
@@ -10,18 +17,30 @@ interface Hook {
   } | null;
   sessionId(): string | null;
   inputsSent(): number;
+  touchEnabled(): boolean;
 }
 declare global {
   interface Window {
-    __eyespy?: Hook;
+    __raterobbers?: Hook;
   }
 }
 
 /** Run `fn` in the page against the hook. `fn` must be self-contained; pass data via `arg`. */
+/** Contexts created inside a test are closed here so background pages do not pile up. */
+const opened: { close(): Promise<void> }[] = [];
+test.afterEach(async () => {
+  for (const c of opened.splice(0)) await c.close().catch(() => undefined);
+});
+async function newPage(browser: Browser, options?: BrowserContextOptions): Promise<Page> {
+  const ctx = await browser.newContext(options);
+  opened.push(ctx);
+  return ctx.newPage();
+}
+
 const hook = (page: Page, fn: (h: Hook, arg: unknown) => unknown, arg: unknown = null) =>
   page.evaluate(
     ([src, a]) => {
-      const h = window.__eyespy;
+      const h = window.__raterobbers;
       if (!h) throw new Error('hook missing');
       return new Function('h', 'arg', `return (${src})(h, arg)`)(h, a) as unknown;
     },
@@ -38,8 +57,8 @@ async function me(page: Page): Promise<{ x: number; y: number; tick: number }> {
 }
 
 test('two players create and join a match by code, start it, and move', async ({ browser }) => {
-  const host = await (await browser.newContext()).newPage();
-  const guest = await (await browser.newContext()).newPage();
+  const host = await newPage(browser);
+  const guest = await newPage(browser);
   const errors: string[] = [];
   for (const p of [host, guest]) p.on('pageerror', (e) => errors.push(e.message));
 
@@ -114,8 +133,8 @@ test('joining with a bad code shows a toast and stays on the home screen', async
 
 test('a finished match can be rematched from the same lobby', async ({ browser }) => {
   test.setTimeout(150_000);
-  const host = await (await browser.newContext()).newPage();
-  const guest = await (await browser.newContext()).newPage();
+  const host = await newPage(browser);
+  const guest = await newPage(browser);
   const errors: string[] = [];
   for (const p of [host, guest]) p.on('pageerror', (e) => errors.push(e.message));
 
@@ -166,6 +185,73 @@ test('a finished match can be rematched from the same lobby', async ({ browser }
     if (now.x !== start.x || now.y !== start.y) break;
   }
   const after = await me(host);
+  expect(after).not.toEqual(expect.objectContaining({ x: start.x, y: start.y }));
+  expect(errors).toEqual([]);
+});
+
+test('an invite link lands a named friend straight in the lobby', async ({ browser }) => {
+  const host = await newPage(browser);
+  await host.goto('/');
+  await host.fill('#name', 'Host');
+  await host.click('#create');
+  const code = (await host.locator('.code').textContent({ timeout: 15_000 }))?.trim() ?? '';
+
+  // A friend who has never set a name: the code is prefilled, they type a name and join.
+  const fresh = await newPage(browser);
+  await fresh.goto(`/?code=${code.toLowerCase()}`);
+  await expect(fresh.locator('#code')).toHaveValue(code);
+  expect(new URL(fresh.url()).search).toBe(''); // the code is stripped from the address bar
+  await fresh.fill('#name', 'Friend');
+  await fresh.click('#join');
+  await expect(fresh.locator('.code')).toHaveText(code);
+
+  // A friend with a saved name skips Home entirely.
+  const regular = await newPage(browser);
+  await regular.goto('/');
+  await regular.evaluate(() => localStorage.setItem('raterobbers.name', 'Regular'));
+  await regular.goto(`/?code=${code}`);
+  await expect(regular.locator('.code')).toHaveText(code);
+  await expect(host.locator('.team li')).toHaveCount(3);
+});
+
+test('a phone can play with the on-screen controls', async ({ browser }) => {
+  const host = await newPage(browser);
+  const phone = await newPage(browser, { ...devices['Pixel 7'] });
+  const errors: string[] = [];
+  phone.on('pageerror', (e) => errors.push(e.message));
+
+  await host.goto('/');
+  await host.fill('#name', 'Host');
+  await host.click('#create');
+  const code = (await host.locator('.code').textContent({ timeout: 15_000 }))?.trim() ?? '';
+  await phone.goto('/');
+  await phone.fill('#name', 'Phone');
+  await phone.fill('#code', code);
+  await phone.click('#join');
+  await expect(phone.locator('.code')).toHaveText(code);
+  await host.fill('input[data-cfg="matchDurationSec"]', '60');
+  await host.press('input[data-cfg="matchDurationSec"]', 'Tab');
+  await host.click('#ready');
+  await phone.click('#ready');
+  await expect(host.locator('#start')).toBeEnabled();
+  await host.click('#start');
+  await expect.poll(() => hook(phone, (h) => h.state()?.phase)).toBe('playing');
+
+  // Touch controls show on the phone, not on the desktop.
+  expect(await hook(phone, (h) => h.touchEnabled())).toBe(true);
+  await expect(phone.locator('#touch')).toBeVisible();
+  await expect(host.locator('#touch')).toBeHidden();
+
+  const start = await me(phone);
+  for (const dir of ['right', 'down', 'left', 'up']) {
+    const btn = phone.locator(`.touch-btn.${dir}`);
+    await btn.dispatchEvent('pointerdown', { pointerId: 1, isPrimary: true, pointerType: 'touch' });
+    await phone.waitForTimeout(400);
+    await btn.dispatchEvent('pointerup', { pointerId: 1, isPrimary: true, pointerType: 'touch' });
+    const now = await me(phone);
+    if (now.x !== start.x || now.y !== start.y) break;
+  }
+  const after = await me(phone);
   expect(after).not.toEqual(expect.objectContaining({ x: start.x, y: start.y }));
   expect(errors).toEqual([]);
 });

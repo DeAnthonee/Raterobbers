@@ -1,12 +1,16 @@
 import Phaser from 'phaser';
-import type { GameMap, WireRoomState } from '@eyespy/shared';
+import type { GameMap, WireRoomState } from '@raterobbers/shared';
 import { CloseCode } from '@colyseus/sdk';
 import { Net, storedToken, type Connection } from './net';
 import { BootScene } from './scenes/BootScene';
 import { MatchScene, type MatchSceneData } from './scenes/MatchScene';
+import { parseInviteCode } from './invite';
+import { TouchControls, isTouchDevice } from './touch';
 import { Overlay } from './ui';
 
 const overlay = new Overlay(document.getElementById('overlay') as HTMLElement);
+const touch = new TouchControls(document.body);
+const touchEnabled = isTouchDevice();
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,
@@ -32,6 +36,7 @@ let inputsSent = 0;
 function stopMatchScene(): void {
   if (game.scene.isActive('match')) game.scene.stop('match');
   matchRunning = false;
+  touch.hide();
 }
 
 function render(state: WireRoomState): void {
@@ -54,9 +59,11 @@ function render(state: WireRoomState): void {
     case 'playing':
     case 'overtime':
       overlay.hide();
+      if (touchEnabled) touch.show();
       startMatchSceneIfReady();
       break;
     case 'ended':
+      touch.hide();
       startMatchSceneIfReady();
       overlay.showResults(state, sessionId, {
         onRematch: () => conn?.send('rematch', {}),
@@ -69,7 +76,7 @@ function render(state: WireRoomState): void {
 function startMatchSceneIfReady(): void {
   if (matchRunning || !conn || !map) return;
   matchRunning = true;
-  const data: MatchSceneData = { conn, map };
+  const data: MatchSceneData = { conn, map, touch: touch.state };
   game.scene.start('match', data);
 }
 
@@ -112,11 +119,30 @@ async function leave(): Promise<void> {
   showHome();
 }
 
-function showHome(): void {
-  overlay.showHome({
-    onCreate: (name) => void connect(() => net.create(name), 'Creating match…'),
-    onJoin: (code, name) => void connect(() => net.join(code, name), 'Joining…'),
-  });
+function showHome(prefillCode = ''): void {
+  overlay.showHome(
+    {
+      onCreate: (name) => void connect(() => net.create(name), 'Creating match…'),
+      onJoin: (code, name) => void connect(() => net.join(code, name), 'Joining…'),
+    },
+    prefillCode,
+  );
+}
+
+/** Invite link (`/?code=ABCDE`): prefill the code, or join straight away with a saved name. */
+function handleInvite(): boolean {
+  const code = parseInviteCode(window.location.search);
+  if (!code) return false;
+  history.replaceState(null, '', window.location.pathname);
+  let savedName = '';
+  try {
+    savedName = localStorage.getItem('raterobbers.name') ?? '';
+  } catch {
+    /* ignore */
+  }
+  if (savedName) void connect(() => net.join(code, savedName), `Joining ${code}…`);
+  else showHome(code);
+  return true;
 }
 
 async function connect(make: () => Promise<Connection>, text: string): Promise<void> {
@@ -135,6 +161,7 @@ async function connect(make: () => Promise<Connection>, text: string): Promise<v
 }
 
 async function boot(): Promise<void> {
+  if (handleInvite()) return;
   if (!storedToken()) {
     showHome();
     return;
@@ -145,12 +172,14 @@ async function boot(): Promise<void> {
   else showHome();
 }
 
-// Dev/test hook: lets end-to-end tests read the current wire state.
-if (import.meta.env.DEV) {
-  (window as unknown as { __eyespy: unknown }).__eyespy = {
+// Dev/test hook: lets end-to-end tests read the current wire state. Read-only; enabled in
+// dev builds and in builds made with VITE_E2E=1 (the e2e suite runs the production bundle).
+if (import.meta.env.DEV || import.meta.env.VITE_E2E === '1') {
+  (window as unknown as { __raterobbers: unknown }).__raterobbers = {
     state: () => conn?.state() ?? null,
     sessionId: () => conn?.sessionId ?? null,
     inputsSent: () => inputsSent,
+    touchEnabled: () => touchEnabled,
   };
 }
 

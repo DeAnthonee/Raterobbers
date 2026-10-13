@@ -22,7 +22,7 @@ import {
   type PlayerInput,
   type TeamSetup,
   type TickEvent,
-} from '@eyespy/shared';
+} from '@raterobbers/shared';
 import { Room, type Client, type Deferred } from '@colyseus/core';
 import { registerRoom, unregisterRoom } from './registry';
 import { LobbyPlayerSchema, RoomStateSchema } from './schema';
@@ -30,7 +30,7 @@ import { syncConfig, syncMatch, toPublicWire } from './sync';
 
 const CODE_LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 const CODE_LENGTH = 5;
-const CODES_CHANNEL = '$eyespy:joinCodes';
+const CODES_CHANNEL = '$raterobbers:joinCodes';
 const TEAM_NAMES = ['Red', 'Blue', 'Green', 'Yellow'];
 const MAX_NAME_LENGTH = 16;
 /**

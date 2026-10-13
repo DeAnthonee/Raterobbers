@@ -8,8 +8,8 @@ import {
   step,
   type TeamSetup,
   type WireMatch,
-} from '@eyespy/shared';
-import { held, runTicks } from '@eyespy/shared/testing';
+} from '@raterobbers/shared';
+import { held, runTicks } from '@raterobbers/shared/testing';
 import { Encoder } from '@colyseus/schema';
 import { ConfigSchema, MatchSchema } from './schema';
 import { syncConfig, syncMatch, toPublicWire } from './sync';

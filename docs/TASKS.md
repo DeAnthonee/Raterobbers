@@ -1,4 +1,4 @@
-# Eye Spy — Task List
+# Rate Robbers — Task List
 
 Mirror of the working task list. Update when a task changes state. Milestones are defined
 in `docs/GAME_SPEC.md` §11.

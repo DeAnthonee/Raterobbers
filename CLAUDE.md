@@ -1,4 +1,4 @@
-# Eye Spy (repo: DeAnthonee/Raterobbers) — context for AI sessions
+# Rate Robbers (repo: DeAnthonee/Raterobbers) — context for AI sessions
 
 Read this first. It is the hand-off between sessions working on this repository.
 The code started life in `DeAnthonee/Eye_Spy` (PRs #1–#5 there) and moved here with its full history on 2026-10-13; the public hostname is raterobbers.deanthoneeking.com.
@@ -47,7 +47,7 @@ Future console port rebuilds only the client; rules and server protocol carry ov
 pnpm install          # once
 pnpm check            # lint + format:check + typecheck + test (what CI runs)
 pnpm test             # all packages
-pnpm --filter @eyespy/shared test:watch
+pnpm --filter @raterobbers/shared test:watch
 pnpm dev              # server (tsx watch) + client (vite) in parallel
 pnpm build            # server bundle (esbuild) + client bundle (vite)
 pnpm format           # fix formatting

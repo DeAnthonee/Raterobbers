@@ -1,10 +1,10 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ColyseusTestServer } from '@colyseus/testing';
 import type { Room as SdkRoom } from '@colyseus/sdk';
-import type { GameMap, WireRoomState } from '@eyespy/shared';
+import type { GameMap, WireRoomState } from '@raterobbers/shared';
 import { GAME_ROOM, server } from './app';
 import { GameRoom, parseConfigPatch, parseInputEvent, sanitizeName } from './GameRoom';
-import { createMatch, generateMap, makeConfig, type TeamSetup } from '@eyespy/shared';
+import { createMatch, generateMap, makeConfig, type TeamSetup } from '@raterobbers/shared';
 
 /** Fast settings so the integration tests finish quickly. */
 const FAST = { countdownSec: 0, reconnectGraceSec: 1, matchDurationSec: 30 };

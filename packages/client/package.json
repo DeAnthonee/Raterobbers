@@ -1,9 +1,9 @@
 {
-  "name": "@eyespy/client",
+  "name": "@raterobbers/client",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Browser client for Eye Spy (Vite + Phaser).",
+  "description": "Browser client for Rate Robbers (Vite + Phaser).",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@colyseus/sdk": "0.18.5",
-    "@eyespy/shared": "workspace:*",
+    "@raterobbers/shared": "workspace:*",
     "phaser": "3.90.0"
   },
   "devDependencies": {

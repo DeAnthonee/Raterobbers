@@ -6,7 +6,7 @@ import {
   matchToWire,
   type TeamSetup,
   type WireRoomState,
-} from '@eyespy/shared';
+} from '@raterobbers/shared';
 import { colorToNumber, formatClock, glide, hudModel, resultModel } from './viewModel';
 
 const teams: TeamSetup[] = [

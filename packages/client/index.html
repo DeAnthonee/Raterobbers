@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Eye Spy</title>
+    <title>Rate Robbers</title>
     <style>
       :root {
         color-scheme: dark;
@@ -201,6 +201,69 @@
       }
       tr.winner td {
         font-weight: 700;
+      }
+      #touch {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 5;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      #touch.hidden {
+        display: none;
+      }
+      #touch .dpad {
+        position: absolute;
+        left: 16px;
+        bottom: 16px;
+        width: 150px;
+        height: 150px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+        gap: 4px;
+      }
+      .touch-btn {
+        pointer-events: auto;
+        touch-action: none;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        background: rgba(40, 40, 52, 0.75);
+        color: var(--text);
+        font-size: 20px;
+        font-weight: 700;
+        padding: 0;
+      }
+      .touch-btn:active {
+        background: rgba(255, 209, 102, 0.85);
+        color: #1a1400;
+      }
+      .touch-btn.up {
+        grid-column: 2;
+        grid-row: 1;
+      }
+      .touch-btn.left {
+        grid-column: 1;
+        grid-row: 2;
+      }
+      .touch-btn.right {
+        grid-column: 3;
+        grid-row: 2;
+      }
+      .touch-btn.down {
+        grid-column: 2;
+        grid-row: 3;
+      }
+      .touch-btn.action {
+        position: absolute;
+        right: 16px;
+        bottom: 24px;
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        font-size: 16px;
+        letter-spacing: 0.05em;
       }
       #toast {
         position: fixed;

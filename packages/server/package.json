@@ -1,9 +1,9 @@
 {
-  "name": "@eyespy/server",
+  "name": "@raterobbers/server",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Authoritative Colyseus game server for Eye Spy.",
+  "description": "Authoritative Colyseus game server for Rate Robbers.",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
@@ -15,7 +15,7 @@
     "@colyseus/core": "0.18.18",
     "@colyseus/schema": "^5.0.39",
     "@colyseus/ws-transport": "0.18.4",
-    "@eyespy/shared": "workspace:*",
+    "@raterobbers/shared": "workspace:*",
     "express": "5.3.0"
   },
   "devDependencies": {
